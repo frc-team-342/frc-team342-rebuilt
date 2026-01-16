@@ -9,6 +9,7 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -30,7 +31,7 @@ public class SwereModule {
 
     private RelativeEncoder driveEncoder;
     private RelativeEncoder rotateEncoder;
-    private CANcoder absoluteRotateEncoder;
+    private CANcoder rotateCANcoder;
 
     private SparkClosedLoopController driveController;
     private SparkClosedLoopController rotateController;
@@ -94,7 +95,7 @@ public class SwereModule {
         this.encoderOffset = encoderOffset;
         this.label = label;
 
-        absoluteRotateEncoder = new CANcoder(CANcoderId);
+        rotateCANcoder = new CANcoder(CANcoderId);
         
         moduleState = new SwerveModuleState();
     }
@@ -105,6 +106,14 @@ public class SwereModule {
                 driveEncoder.getVelocity(), 
                 new Rotation2d(rotateEncoder.getPosition())
             );
+    }
+
+    /**Sets the drive velocity and angle of the Swerve Module */
+    public void setState(SwerveModuleState state){
+        state.optimize(new Rotation2d(getRotateEncoderAngle()));
+
+        driveController.setSetpoint(state.speedMetersPerSecond, ControlType.kVelocity);
+        rotateController.setSetpoint(state.angle.getRadians(), ControlType.kPosition);
     }
 
     /**Returns the position of the swere module (distance traveled in meters and module angle in radians) */
@@ -127,7 +136,7 @@ public class SwereModule {
 
     /**@return angle of the CANcoder as a rotation 2d */
     public Rotation2d getRotation2d(){
-        return new Rotation2d(absoluteRotateEncoder.getPosition().getValueAsDouble());
+        return new Rotation2d(rotateCANcoder.getPosition().getValueAsDouble());
     }
 
     /** @return encoder position in radians*/
@@ -135,8 +144,20 @@ public class SwereModule {
         return rotateEncoder.getPosition();
     }
 
+    /**returns the ecoder position in radians between -pi and pi */
+    public double getRotateEncoderAngle(){
+        double angle = rotateEncoder.getPosition() % (2*Math.PI);
+        return (angle > Math.PI) ? angle - (2.0*Math.PI) : angle;
+    }
+
     /** @return rotate encoder position in radians */
     public double getRotateInRadian(){
-        return 0;
+        double angle = rotateCANcoder.getAbsolutePosition().getValueAsDouble() * DriveConstants.ROTATE_POSITION_CONVERSION;
+        return (angle > Math.PI) ? angle - (2.0*Math.PI) : angle;
+    }
+
+    /**returns the raw offset of the module */
+    public double getRawOffset(){
+        return rotateCANcoder.getAbsolutePosition().getValueAsDouble();
     }
 }

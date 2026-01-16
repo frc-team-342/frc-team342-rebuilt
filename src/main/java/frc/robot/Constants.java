@@ -33,10 +33,15 @@ public final class Constants {
     public static final int BACK_LEFT_CANCODER_ID = 0;
     public static final int BACK_RIGHT_CANCODER_ID = 0;
 
-    public static final double FL_OFFESET = 0.0;
+    public static final double FL_OFFSET = 0.0;
     public static final double FR_OFFSET = 0.0;
     public static final double BL_OFFSET = 0.0;
     public static final double BR_OFFSET = 0.0;
+
+    public static final double FL_DIAMETER = 0.0;
+    public static final double FR_DIAMETER = 0.0;
+    public static final double BL_DIAMETER = 0.0;
+    public static final double BR_DIAMETER = 0.0;
 
     public static final double DRIVE_GEAR_RATIO = 0.0;
     public static final double ROTATE_GEAR_RATIO = 0.0;
