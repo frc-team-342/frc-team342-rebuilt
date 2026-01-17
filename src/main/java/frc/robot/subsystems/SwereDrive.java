@@ -166,6 +166,8 @@ public class SwereDrive extends SubsystemBase {
       //   }    
 
   }
+
+  /**Returns the modules positions */
   public SwerveModulePosition[] getModulePositions(){
     return new SwerveModulePosition[]{
       new SwerveModulePosition(frontLeftModule.getDistance(), new Rotation2d(frontLeftModule.getRotateEncoderAngle())),
@@ -175,20 +177,22 @@ public class SwereDrive extends SubsystemBase {
     };
   }
 
+  /**Returns if the current alliance is red*/
   public Boolean isRed(){
     return DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
   }
 
+  /**Returns the gryo's reading in radians */
   public double gyroRadians(){
     return navx.getAngle() * (Math.PI/180.0);
   }
 
-  
-
+  /**Returns the robots chassis speeds */
   public ChassisSpeeds getChassisSpeeds(){
     return chassisSpeeds;
   }
 
+  /**Sets each modules chassis speeds to a given chassis speed */
   public void drive(ChassisSpeeds chassisSpeeds){
     if(fieldOriented)
       chassisSpeeds = chassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, new Rotation2d(gyroRadians()));
@@ -202,18 +206,22 @@ public class SwereDrive extends SubsystemBase {
     this.chassisSpeeds = chassisSpeeds;
   }
 
+  /**Returns the robots current pose */
   public Pose2d getPose2d(){
     return odometry.getPoseMeters();
   }
 
+  /**resets the robots odometry*/
   public void resetOdometry(Pose2d pose){
     odometry.resetPosition(new Rotation2d(gyroRadians()), getModulePositions(), pose);
   }
 
+  /**Resets the robot's pose */
   public void resetPose(Pose2d pose){
     odometry.resetPose(pose);
   }
 
+  /**Stops Swere drive */
   public void stop(){
     frontLeftModule.stop();
     frontRightModule.stop();
@@ -221,6 +229,7 @@ public class SwereDrive extends SubsystemBase {
     backRightModule.stop();
   }
 
+  /**Drives swere from Joystick inputs*/
   public Command driveWithJoystick(XboxController controller){
     double leftTrigger = controller.getLeftTriggerAxis();
     double speedModifier = MAX_DRIVE_SPEED - (leftTrigger * (MAX_DRIVE_SPEED - MIN_DRIVE_SPEED));
@@ -235,6 +244,7 @@ public class SwereDrive extends SubsystemBase {
     return Commands.runEnd(() -> drive(chassisSpeeds), () -> {stop();}, this);
   }
 
+  //Puts swere module data
   public void putFrontLeftData(SendableBuilder builder){
     builder.addDoubleProperty(frontLeftModule.getLabel() + "Offset", () -> frontLeftModule.getRawOffset(), null);
     builder.addDoubleProperty(frontLeftModule.getLabel() + "Rotate position", () -> frontLeftModule.getRotateEncoderAngle(), null);
@@ -264,6 +274,7 @@ public class SwereDrive extends SubsystemBase {
     builder.addDoubleProperty(backLeftModule.getLabel() + "Drive Velocity", () -> backLeftModule.getVelocity(), null);
   }
 
+  //Puts swere drive data
   public void initSendable(SendableBuilder builder){
     putFrontLeftData(builder);
     putFrontRightData(builder);
