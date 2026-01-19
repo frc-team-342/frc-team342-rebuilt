@@ -68,4 +68,16 @@ public final class Constants {
     public static final double MIN_DRIVE_SPEED = 0;
     public static final double MIN_ROTATE_SPPEED = 0;
   }
+
+  public static class TurretConstants{
+    public static final int TURRET_ID = 0;
+    public static final int[] TURRET_PID_VALUES = {0, 0, 0};
+
+    //Will be used if turret doesn't use a slip ring
+    public static final double TURRET_MIN_ANGLE = 0; //The minimum angle the turret can safely be at
+    public static final double TURRET_MAX_ANGLE = 0; //The maximum angle the turret can safely be at
+
+    public static final double TURRET_GEAR_RATIO = 0;
+    public static final double TURRET_POSITION_CONVERSION = 360/TURRET_GEAR_RATIO;
+  }
 }

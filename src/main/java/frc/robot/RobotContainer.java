@@ -9,6 +9,7 @@ import frc.robot.commands.Autos;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.SwereDrive;
+import frc.robot.subsystems.Turret;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -28,11 +29,17 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final SwereDrive swere;
+  private final Turret turret;
 
   private final XboxController driver;
+  private final XboxController operator;
+
   private final JoystickButton fieldOrientedButton;
+  private final JoystickButton turretToggleButton;
 
   private final Command toggleFieldOriented;
+  private final Command turretToAngle;
+  private final Command toggleManualTurret;
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
@@ -41,15 +48,23 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     swere = new SwereDrive();
+    turret = new Turret();
 
     driver = new XboxController(0);
+    operator = new XboxController(1);
 
     toggleFieldOriented = Commands.runOnce(() -> {swere.toggleFieldOriented();}, swere);
+    toggleManualTurret = Commands.runOnce(() -> {turret.toggleManual();}, turret);
+    turretToAngle = Commands.run(() -> {turret.turretToAngle(0, operator);});
+
     fieldOrientedButton = new JoystickButton(driver, XboxController.Button.kA.value);
+    turretToggleButton = new JoystickButton(operator, XboxController.Button.kStart.value);
 
     swere.setDefaultCommand(swere.driveWithJoystick(driver));
+    turret.setDefaultCommand(turretToAngle);
 
     SmartDashboard.putData(swere);
+    SmartDashboard.putData(turret);
     // Configure the trigger bindings
     configureBindings();
   }
@@ -72,6 +87,7 @@ public class RobotContainer {
     // cancelling on release.
     m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
     fieldOrientedButton.onTrue(toggleFieldOriented); // 'A' button
+    turretToggleButton.onTrue(toggleManualTurret); // 'Start' button
   }
 
   /**
