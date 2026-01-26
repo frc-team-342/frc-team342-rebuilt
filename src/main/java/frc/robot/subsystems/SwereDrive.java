@@ -50,6 +50,7 @@ import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.CustomXboxController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -235,14 +236,14 @@ public class SwereDrive extends SubsystemBase {
   }
 
   /**Drives swere from Joystick inputs*/
-  public Command driveWithJoystick(XboxController controller){
+  public Command driveWithJoystick(CustomXboxController controller){
     double leftTrigger = controller.getLeftTriggerAxis();
     double speedModifier = MAX_DRIVE_SPEED - (leftTrigger * (MAX_DRIVE_SPEED - MIN_DRIVE_SPEED));
     double rotateModifier = MAX_ROTATE_SPEED - (leftTrigger * (MAX_ROTATE_SPEED - MIN_ROTATE_SPPEED));
 
-    double xSpeed = MathUtil.applyDeadband(controller.getLeftX(), 0.15) * speedModifier;
-    double ySpeed = MathUtil.applyDeadband(controller.getLeftY(), 0.15) * speedModifier;
-    double rotateSpeed = MathUtil.applyDeadband(controller.getRawAxis(4), 0.15) * rotateModifier;
+    double xSpeed = controller.getLeftX() * speedModifier;
+    double ySpeed = controller.getLeftY() * speedModifier;
+    double rotateSpeed = controller.getRawAxis(4) * rotateModifier;
 
     chassisSpeeds = new ChassisSpeeds(-xSpeed, -ySpeed, -rotateSpeed);
 

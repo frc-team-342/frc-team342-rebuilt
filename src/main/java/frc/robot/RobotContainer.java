@@ -13,6 +13,7 @@ import frc.robot.subsystems.SwereDrive;
 import frc.robot.subsystems.Turret;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.CustomXboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -32,8 +33,8 @@ public class RobotContainer {
   private final SwereDrive swere;
   private final Turret turret;
 
-  private final XboxController driver;
-  private final XboxController operator;
+  private final CustomXboxController driver;
+  private final CustomXboxController operator;
 
   private final JoystickButton fieldOrientedButton;
   private final JoystickButton turretToggleButton;
@@ -55,8 +56,8 @@ public class RobotContainer {
     swere = new SwereDrive();
     turret = new Turret();
 
-    driver = new XboxController(0);
-    operator = new XboxController(1);
+    driver = new CustomXboxController(0);
+    operator = new CustomXboxController(1);
 
     toggleFieldOriented = Commands.runOnce(() -> {swere.toggleFieldOriented();}, swere);
     toggleManualTurret = Commands.runOnce(() -> {turret.toggleManual();}, turret);

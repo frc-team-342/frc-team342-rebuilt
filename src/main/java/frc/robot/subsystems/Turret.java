@@ -17,6 +17,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.CustomXboxController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.TurretConstants;
 
@@ -56,7 +57,7 @@ public class Turret extends SubsystemBase {
   }
 
   /**Rotates a the turret to an angle when not on manual control; otherwise, it is controlled with a Joystick */
-  public void turretToAngle(double goal, XboxController controller){
+  public void turretToAngle(double goal, CustomXboxController controller){
     if(!manual){
       double currentPosition = turretEncoder.getPosition();
       double convertedGoal = currentPosition + goal % 360;
@@ -71,8 +72,8 @@ public class Turret extends SubsystemBase {
   }
 
   /**Controls the turret with joystick inputs */
-  public void manualTurret(XboxController controller){
-    double speed = MathUtil.applyDeadband(controller.getRawAxis(4), 0.15);
+  public void manualTurret(CustomXboxController controller){
+    double speed = controller.getRawAxis(4);
     if(turretEncoder.getPosition() >= TurretConstants.TURRET_MAX_ANGLE -10 && speed > 0)
       stop();
 
