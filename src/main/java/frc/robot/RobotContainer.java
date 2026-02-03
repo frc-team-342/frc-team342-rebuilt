@@ -31,6 +31,7 @@ public class RobotContainer {
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final SwereDrive swere;
   private final Turret turret;
+  private final PhotonVision photonVision;
 
   private final XboxController driver;
   private final XboxController operator;
@@ -45,8 +46,6 @@ public class RobotContainer {
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
-
-  private final PhotonVision photonVision;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -70,6 +69,7 @@ public class RobotContainer {
 
     SmartDashboard.putData(swere);
     SmartDashboard.putData(turret);
+    SmartDashboard.putData(photonVision);
     // Configure the trigger bindings
     configureBindings();
   }
