@@ -41,8 +41,9 @@ public class Shooter extends SubsystemBase {
   private InterpolatingDoubleTreeMap bottomShooterMap;
 
   private Spindexer spindexer;
+  private PhotonVision photonVision;
   /** Creates a new Shooter. */
-  public Shooter(Spindexer spindexer) {
+  public Shooter(Spindexer spindexer, PhotonVision photonVision) {
     topShooterMotor = new SparkMax(TOP_SHOOTER_MOTOR_ID, MotorType.kBrushless);
     bottomShooterMotor =  new SparkMax(BOTTOM_SHOOTER_MOTOR_ID, MotorType.kBrushless);
     feederMotor = new SparkMax(FEEDER_MOTOR_ID, MotorType.kBrushless);
@@ -88,6 +89,8 @@ public class Shooter extends SubsystemBase {
 
     this.spindexer = spindexer;
     spindexer.setShooting(false);
+
+    this.photonVision = photonVision;
   }
 
   /**Gets the velocity of the shooter motor controlling the top wheels.
@@ -148,9 +151,9 @@ public class Shooter extends SubsystemBase {
    * 
    * @param distance The distance (in meters) from the hub.
    */
-  public void shootWithDistance(double distance) {
-    topShooterPID.setSetpoint(getTopTargetRPM(distance), ControlType.kVelocity);
-    bottomShooterPID.setSetpoint(getBottomTargetRPM(distance), ControlType.kVelocity);
+  public void shootWithDistance() {
+    topShooterPID.setSetpoint(getTopTargetRPM(photonVision.getDistanceToHub().get()), ControlType.kVelocity);
+    bottomShooterPID.setSetpoint(getBottomTargetRPM(photonVision.getDistanceToHub().get()), ControlType.kVelocity);
     spindexer.setShooting(true);
   }
 

@@ -25,6 +25,7 @@ public class Camera {
     private List<PhotonTrackedTarget> tags;
     private List<PhotonPipelineResult> cameraResults;
     private Pose3d pose;
+    private PhotonTrackedTarget trackedHubTag;
 
     /**
      * Creates a new Camera.
@@ -37,6 +38,8 @@ public class Camera {
 
         cameraResults = new ArrayList<>();
         pose = new Pose3d();
+
+        trackedHubTag = new PhotonTrackedTarget();
     }
 
     /**Updates the pose3d of the robot.
@@ -206,10 +209,12 @@ public class Camera {
                         for(int i = 0; i < hubTagsIDs.values().length; i++) {
                             if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
                                 if(tag.getFiducialId() == tagID.getRedHubTagID()) {
+                                    trackedHubTag = tag;
                                     return true;
                                 }
                             }else{
                                 if(tag.getFiducialId() == tagID.getBlueHubTagID()) {
+                                    trackedHubTag = tag;
                                     return true;
                                 }
                             }
@@ -289,5 +294,22 @@ public class Camera {
         }
 
         return false;
+    }
+
+    /**Gets the hub tag that is currently being seen.
+     * This method is for tracking the hub for the turret and shooter.
+     * 
+     * @return The hub tag that is currently being seen by the turret camera.
+     */
+    public Optional<PhotonTrackedTarget> getTrackedHubTag() {
+        return Optional.of(trackedHubTag);
+    }
+
+    /**Gets the yaw from the robot to the hub.
+     * 
+     * @return The yaw (in degrees) from the robot to the hub.
+     */
+    public Optional<Double> getYawToHub() {
+        return Optional.of(getRobotToTagYaw(getTrackedHubTag().get()).get());
     }
 }

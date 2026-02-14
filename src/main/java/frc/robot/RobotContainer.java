@@ -68,14 +68,14 @@ public class RobotContainer {
     turret = new Turret();
     intake = new Intake();
     spindexer = new Spindexer();
-    shooter = new Shooter(spindexer);
+    shooter = new Shooter(spindexer, photonVision);
 
     driver = new CustomXboxController(0);
     operator = new CustomXboxController(1);
 
     toggleFieldOriented = Commands.runOnce(() -> {swere.toggleFieldOriented();}, swere);
     toggleManualTurret = Commands.runOnce(() -> {turret.toggleManual();}, turret);
-    turretToAngle = Commands.run(() -> {turret.turretToAngle(0, operator);});
+    turretToAngle = Commands.run(() -> {turret.turretToAngle(photonVision.getYawToHub().get(), operator);});
     intakeFuel = Commands.run(() -> {intake.spinIntake(0);}, intake);
     getFuelUnstuck = Commands.run(() -> {intake.spinIntake(0);}, intake);
 

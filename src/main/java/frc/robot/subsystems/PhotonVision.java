@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
+import org.photonvision.PhotonUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
@@ -318,6 +319,28 @@ public class PhotonVision extends SubsystemBase {
     this.pose2d = pose2d;
   }
 
+  /**Gets the distance from the robot to the hub.
+   * 
+   * @return The distance (in meters) from the robot to the hub.
+   * If the robot pose2d or the hub tag is not present, this returns 0.0.
+   */
+  public Optional<Double> getDistanceToHub() {
+    if(getRobotPose2d().isPresent() && FIELD_LAYOUT.getTagPose(allCameras[0].getTrackedHubTag().get().getFiducialId()).isPresent()) {
+      return Optional.of(PhotonUtils.getDistanceToPose(getRobotPose2d().get(), FIELD_LAYOUT.getTagPose(allCameras[0].getTrackedHubTag().get().getFiducialId()).get().toPose2d()));
+    }
+    
+    return Optional.of(0.0);
+  }
+
+  /**Gets the yaw from the robot to the hub.
+   * 
+   * @return The yaw (in degrees) from the robot to the hub.
+   * If the distance to the hub is not present, this returns 0.0.
+   */
+  public Optional<Double> getYawToHub() {
+    return getDistanceToHub().isPresent() ? Optional.of(allCameras[0].getYawToHub().get()) : Optional.of(0.0);
+  }
+
   //Puts data for vision on Elastic
   public void initSendable(SendableBuilder builder) {
     super.initSendable(builder);
@@ -336,6 +359,8 @@ public class PhotonVision extends SubsystemBase {
     builder.addDoubleProperty("Robot Yaw", () -> getRobotYaw().get(), null);
     builder.addDoubleProperty("Left Turret Camera Ambiguity", () -> allCameras[0].getPoseAmbiguity().get(), null);
     builder.addDoubleProperty("Right Turret Camera Ambiguity", () -> allCameras[1].getPoseAmbiguity().get(), null);
+    builder.addDoubleProperty("Distance to Hub", () -> getDistanceToHub().get(), null);
+    builder.addDoubleProperty("Yaw to Hub", () -> getYawToHub().get(), null);
     SmartDashboard.putData(field);
   }
 
