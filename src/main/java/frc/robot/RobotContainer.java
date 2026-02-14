@@ -14,6 +14,7 @@ import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.SwereDrive;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Shooter;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.CustomXboxController;
@@ -37,7 +38,8 @@ public class RobotContainer {
   private final Turret turret;
   private final PhotonVision photonVision;
   private final Intake intake;
-  public final Spindexer spindexer;
+  private final Spindexer spindexer;
+  private final Shooter shooter;
 
   private final CustomXboxController driver;
   private final CustomXboxController operator;
@@ -64,6 +66,7 @@ public class RobotContainer {
     turret = new Turret();
     intake = new Intake();
     spindexer = new Spindexer();
+    shooter = new Shooter(spindexer);
 
     driver = new CustomXboxController(0);
     operator = new CustomXboxController(1);
