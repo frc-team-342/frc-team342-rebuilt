@@ -9,6 +9,7 @@ import frc.robot.subsystems.Spindexer;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -186,6 +187,17 @@ public class Shooter extends SubsystemBase {
    */
   public void stopFeeder() {
     feederMotor.stopMotor();
+  }
+
+  //Putting shooter data onto Elastic
+  public void initSendable(SendableBuilder builder) {
+    super.initSendable(builder);
+
+    builder.setSmartDashboardType("Shooter");
+
+    builder.addDoubleProperty("Top Shooter Velocity", () -> getTopShooterVelocity(), null);
+    builder.addDoubleProperty("Bottom Shooter Velocity", () -> getBottomShooterVelocity(), null);
+    builder.addDoubleProperty("Feeder Shooter", () -> getFeederVelocity(), null);
   }
 
   @Override

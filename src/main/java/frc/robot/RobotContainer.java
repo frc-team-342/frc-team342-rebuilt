@@ -94,6 +94,7 @@ public class RobotContainer {
     SmartDashboard.putData(turret);
     SmartDashboard.putData(photonVision);
     SmartDashboard.putData(spindexer);
+    SmartDashboard.putData(shooter);
     // Configure the trigger bindings
     configureBindings();
   }
