@@ -25,7 +25,7 @@ public class Intake extends SubsystemBase {
   private SparkMax wristMotor;
 
   private RelativeEncoder intakeEncoder;
-  private DutyCycleEncoder wristEncoder;
+  private DutyCycleEncoder throughBore;
 
   private SparkClosedLoopController wristPID;
 
@@ -37,7 +37,7 @@ public class Intake extends SubsystemBase {
     wristMotor = new SparkMax(WRIST_ID, MotorType.kBrushless);
 
     intakeEncoder = intakeMotor.getEncoder();
-    wristEncoder = new DutyCycleEncoder(WRIST_ENCODER_ID);
+    throughBore = new DutyCycleEncoder(WRIST_ENCODER_ID);
 
     wristPID = wristMotor.getClosedLoopController();
 
@@ -90,6 +90,20 @@ public class Intake extends SubsystemBase {
     wristPID.setSetpoint(setpoint, ControlType.kPosition);
   }
 
+  /**Stops the wrist motor.
+   * 
+   */
+  public void stopWrist() {
+    wristMotor.stopMotor();
+  }
+
+  /**Stops the intake motor.
+   * 
+   */
+  public void stopIntake() {
+    intakeMotor.stopMotor();
+  }
+
   /**Gets the velocity of the intake in RPM.
    * 
    * @return The velocity of the intake in RPM.
@@ -103,7 +117,7 @@ public class Intake extends SubsystemBase {
    * @return The absolute position of the wrist.
    */
   public double getWristPosition() {
-    return wristEncoder.get();
+    return throughBore.get();
   }
 
   /**Gets the wrist encoder.
@@ -111,7 +125,7 @@ public class Intake extends SubsystemBase {
    * @return The wrist encoder.
    */
   public DutyCycleEncoder getWristEncoder() {
-    return wristEncoder;
+    return throughBore;
   }
 
   //Putting intake and wrist data onto Elastic
