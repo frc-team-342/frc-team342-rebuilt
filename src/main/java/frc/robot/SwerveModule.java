@@ -46,7 +46,7 @@ public class SwerveModule {
     private SparkMaxConfig driveConfig;
     private SparkMaxConfig rotateConfig;
 
-    private RelativeEncoder driveEnconder;
+    private RelativeEncoder driveEncoder;
     private RelativeEncoder rotateEncoder;
 
     private SparkClosedLoopController driveController;
@@ -72,29 +72,23 @@ public class SwerveModule {
         driveConfig = new SparkMaxConfig();
         rotateConfig = new SparkMaxConfig();
 
-            /** not sure weather its supposed to be brake or coast lol so come back to this lol 
-             * And make sure to update the numver withing the stalllimit lol*/  
-
         driveConfig
             .smartCurrentLimit(60)
             .idleMode(IdleMode.kCoast)
             .inverted(invertDrive);
+
         rotateConfig
             .smartCurrentLimit(60)
             .idleMode(IdleMode.kBrake)
             .inverted(invertRotate);
 
-
         /** Get the encoders from the respective motors */
-        driveEnconder = driveMotor.getEncoder();
+        driveEncoder = driveMotor.getEncoder();
         rotateEncoder = rotateMotor.getEncoder();
 
-        double drivePosConversion = ((Math.PI * diameter) / DriveConstants.DRIVE_GEAR_RATIO);
-        driveVelConversion = (drivePosConversion / 60);
-
         /* Sets the Drive converstion (Posistion and Velocity)  factors  */
-        driveConfig.encoder.positionConversionFactor(drivePosConversion); //POSITION
-        driveConfig.encoder.velocityConversionFactor(driveVelConversion); //VELOCITY
+        driveConfig.encoder.positionConversionFactor(DriveConstants.DRIVE_POSITION_CONVERSION); //POSITION
+        driveConfig.encoder.velocityConversionFactor(0.00088); //VELOCITY
 
         /* Set the Rotate conversion (Posistion and Velocity) factors */
         rotateConfig.encoder.positionConversionFactor(DriveConstants.ROTATE_POSITION_CONVERSION); //POSITION
@@ -141,15 +135,15 @@ public class SwerveModule {
 
     /* Returns the distance robot has travlled in meters */
     public double getDistance() {
-            return driveEnconder.getPosition();
+            return driveEncoder.getPosition();
     }
 
     /* Returns the Drive Encoder velocity meters/second */
     public double getDriveVelocity() {
-        return driveEnconder.getVelocity();
+        return driveEncoder.getVelocity();
     }
 
-    /* returns the cancoder reading as a rotation2d */
+    /* Returns the cancoder reading as a rotation2d */
     public Rotation2d canCoderRotation2d() {
         return new Rotation2d(rotateAbsoluteEncoder.getPosition().getValueAsDouble());
     }
@@ -226,7 +220,7 @@ public class SwerveModule {
         state.optimize(new Rotation2d(getRotateEncoderPosition()));
         //state.cosineScale(new Rotation2d(getRotateEncoderPosition()));
 
-        driveController.setSetpoint(state.speedMetersPerSecond / driveVelConversion, ControlType.kVelocity);
+        driveController.setSetpoint(state.speedMetersPerSecond /*/ driveVelConversion*/, ControlType.kVelocity);
         rotateController.setSetpoint(state.angle.getRadians(), ControlType.kPosition);
     }
 }

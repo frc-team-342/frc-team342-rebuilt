@@ -15,6 +15,9 @@ import edu.wpi.first.math.geometry.Transform3d;
 
 import java.util.List;
 
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -78,10 +81,10 @@ public final class Constants {
     public static final int BACK_RIGHT_CANCODER_ID = 12;
 
     //Wheel Diameters
-    public static final double FL_DIAMETER = 4.0;
-    public static final double FR_DIAMETER = 4.0;
-    public static final double BL_DIAMETER = 4.0;
-    public static final double BR_DIAMETER = 4.0;
+    public static final double FL_DIAMETER = Units.inchesToMeters(4.0);
+    public static final double FR_DIAMETER = Units.inchesToMeters(4.0);
+    public static final double BL_DIAMETER = Units.inchesToMeters(4.0);
+    public static final double BR_DIAMETER = Units.inchesToMeters(4.0);
 
     //Module gear Ratios
     public static final double DRIVE_GEAR_RATIO = 6.03;
@@ -90,9 +93,11 @@ public final class Constants {
     //Conversion factors
     public static final double ROTATE_POSITION_CONVERSION = (2*Math.PI)/ROTATE_GEAR_RATIO;
     public static final double ROTATE_VELOCITY_CONVERSION = ROTATE_POSITION_CONVERSION/60.0;
+    public static final double DRIVE_POSITION_CONVERSION = ((Math.PI * FL_DIAMETER) / DRIVE_GEAR_RATIO);
+    public static final double DRIVE_VELOCITY_CONVERSION = DRIVE_POSITION_CONVERSION/60.0;
 
     //PIDF values
-    public static final double[] DRIVE_PIDF_VALUES = {0.002, 0, 0.008, 0};
+    public static final double[] DRIVE_PIDF_VALUES = {0.23, 0, 0.7, 0};
     public static final double[] DRIVE_SVA_VALUES = {0.0952, 0.044888, 0.00558155};
     public static final double[] ROTATE_PID_VALUES = {0.3, 0.0, 0.4};
 
@@ -103,6 +108,11 @@ public final class Constants {
     //Min drive and rotate speeds
     public static final double MIN_DRIVE_SPEED = Units.feetToMeters(3);
     public static final double MIN_ROTATE_SPPEED = Math.PI;
+
+    public static final PPHolonomicDriveController PATH_CONFIG_CONTROLLER = new PPHolonomicDriveController(
+      new PIDConstants(1, 0, 0.7),
+      new PIDConstants(0.25, 0, 0.3)
+    );
   }
 
   public static class TurretConstants{
