@@ -129,10 +129,10 @@ public class SwerveDrive extends SubsystemBase {
         /* Initalizes Kinematics */
         kinematics = new SwerveDriveKinematics(
   
-          /*Front Left */ new Translation2d(Units.inchesToMeters(14.5), Units.inchesToMeters(14.5)),
-          /*Front Right */ new Translation2d(Units.inchesToMeters(14.5), Units.inchesToMeters(-14.5)),
-          /*Back Left */ new Translation2d(Units.inchesToMeters(-14.5), Units.inchesToMeters(14.5)),
-          /*Back Right */ new Translation2d(Units.inchesToMeters(-14.5), Units.inchesToMeters(-14.5))
+          /*Front Left */ new Translation2d(Units.inchesToMeters(10.375), Units.inchesToMeters(10.375)),
+          /*Front Right */ new Translation2d(Units.inchesToMeters(10.375), Units.inchesToMeters(-10.375)),
+          /*Back Left */ new Translation2d(Units.inchesToMeters(-10.375), Units.inchesToMeters(10.375)),
+          /*Back Right */ new Translation2d(Units.inchesToMeters(-10.375), Units.inchesToMeters(-10.375))
   
         );
   
@@ -159,26 +159,16 @@ public class SwerveDrive extends SubsystemBase {
       chasisSpeedSupplier = () -> getChassisSpeeds();
       shouldFlipSupplier = () -> isRed();
                        
-        // try {
-        //   config = RobotConfig.fromGUISettings();
-        // } catch (IOException e) {
-        //   e.printStackTrace();
-        // } catch (ParseException e) {
-        //   e.printStackTrace();
-        // }    
+        try {
+          config = RobotConfig.fromGUISettings();
+        } catch(Exception e){
+          e.printStackTrace();
+        }
 
 
-        // field = new Field2d();
-
+        field = new Field2d();
   
-        //   new Thread(() -> {
-        //     try {
-        //       Thread.sleep(1000);
-        //       pigeon2.setYaw(0); //NAVX WAS HERE
-        //     } catch (Exception e) {}
-        //   }).start();
-  
-        //   configureAutoBuilder();
+          configureAutoBuilder();
       }
 
       public Boolean isRed(){
@@ -305,26 +295,26 @@ public class SwerveDrive extends SubsystemBase {
       backRightModule.spinRotate();
     }
 
-    // public void configureAutoBuilder() {
-    //   AutoBuilder.configure(
-    //     poseSupplier, 
-    //     resetPoseConsumer, 
-    //     chasisSpeedSupplier, 
-    //     robotRelativeOutput, 
-    //     DriveConstants.PATH_CONFIG_CONTROLLER, 
-    //     config, 
-    //     shouldFlipSupplier,
-    //     this
-    //     );
-    // }
+    public void configureAutoBuilder() {
+      AutoBuilder.configure(
+        poseSupplier, 
+        resetPoseConsumer, 
+        chasisSpeedSupplier, 
+        robotRelativeOutput, 
+        DriveConstants.PATH_CONFIG_CONTROLLER, 
+        config, 
+        shouldFlipSupplier,
+        this
+        );
+    }
     
 
     public void putFrontLeftValues(SendableBuilder sendableBuilder){
       sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Rotate Encoder(Radians): " , ()-> frontLeftModule.getRotateEncoderPosition(), null);
       sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Rotate Setpoint", () -> frontLeftModule.getRotateSetpoint(), null);
       sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Absolute Position " , ()-> frontLeftModule.absoluteRotatePosition(), null);
-      sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + "Velocity", () -> frontLeftModule.getDriveVelocity() * frontLeftModule.getVelocityConversion(), null);
-      sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " drive setpoint", () -> (frontLeftModule.getDriveSetpoint() * frontLeftModule.getVelocityConversion()), null);
+      sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + "Velocity", () -> frontLeftModule.getDriveVelocity(), null);
+      sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " drive setpoint", () -> (frontLeftModule.getDriveSetpoint()), null);
       if(swerveModuleStates != null)
         sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Analog Offest " , ()-> swerveModuleStates[0].angle.getRadians(), null);
 
@@ -334,8 +324,8 @@ public class SwerveDrive extends SubsystemBase {
       sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Rotate Encoder(Radians): " , ()-> frontRightModule.getRotateEncoderPosition(), null);
       sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Rotate Setpoint", () -> frontRightModule.getRotateSetpoint(), null);
       sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Absolute Position " , ()-> frontRightModule.absoluteRotatePosition(), null);
-      sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + "Velocity", () -> frontRightModule.getDriveVelocity() * frontRightModule.getVelocityConversion(), null);
-      sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " drive setpoint", () -> (frontRightModule.getDriveSetpoint() * frontRightModule.getVelocityConversion()), null);
+      sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + "Velocity", () -> frontRightModule.getDriveVelocity(), null);
+      sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " drive setpoint", () -> (frontRightModule.getDriveSetpoint()), null);
       if(swerveModuleStates != null)
         sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Analog Offest " , ()-> swerveModuleStates[1].angle.getRadians(), null);
     }
@@ -344,8 +334,8 @@ public class SwerveDrive extends SubsystemBase {
       sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Rotate Encoder(Radians): " , ()-> backLeftModule.getRotateEncoderPosition(), null);
       sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Rotate Setpoint", () -> backLeftModule.getRotateSetpoint(), null);
       sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Absoulete Position " , ()-> backLeftModule.absoluteRotatePosition(), null);
-      sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + "Velocity", () -> backLeftModule.getDriveVelocity() * backLeftModule.getVelocityConversion(), null);
-      sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " drive setpoint", () -> (backLeftModule.getDriveSetpoint() * backLeftModule.getVelocityConversion()), null);
+      sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + "Velocity", () -> backLeftModule.getDriveVelocity(), null);
+      sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " drive setpoint", () -> (backLeftModule.getDriveSetpoint()), null);
       if(swerveModuleStates != null)
         sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Analog Offest " , ()-> swerveModuleStates[2].angle.getRadians(), null);
 
@@ -356,7 +346,7 @@ public class SwerveDrive extends SubsystemBase {
       sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " Rotate Setpoint", () -> backRightModule.getRotateSetpoint(), null);
       sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " Absoulete Position " , ()-> backRightModule.absoluteRotatePosition(), null);
       sendableBuilder.addDoubleProperty(backRightModule.printLabel() + "Velocity", () -> backRightModule.getDriveVelocity(), null);
-      sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " drive setpoint", () -> (backRightModule.getDriveSetpoint() * backRightModule.getVelocityConversion() * backLeftModule.getVelocityConversion()), null);
+      sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " drive setpoint", () -> (backRightModule.getDriveSetpoint()), null);
       if(swerveModuleStates != null)
         sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " Analog Offest " , ()-> swerveModuleStates[3].angle.getRadians(), null);
     }
