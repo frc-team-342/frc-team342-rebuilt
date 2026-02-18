@@ -12,37 +12,37 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkClosedLoopController;
 
 public class Intake extends SubsystemBase {
-  private SparkMax intakeMotor;
-  private SparkMax wristMotor;
+  private SparkFlex intakeMotor;
+  private SparkFlex wristMotor;
 
   private RelativeEncoder intakeEncoder;
   private DutyCycleEncoder throughBore;
 
   private SparkClosedLoopController wristPID;
 
-  private SparkMaxConfig intakeConfig;
-  private SparkMaxConfig wristConfig;
+  private SparkFlexConfig intakeConfig;
+  private SparkFlexConfig wristConfig;
   /** Creates a new Intake. */
   public Intake() {
-    intakeMotor = new SparkMax(INTAKE_ID, MotorType.kBrushless);
-    wristMotor = new SparkMax(WRIST_ID, MotorType.kBrushless);
+    intakeMotor = new SparkFlex(INTAKE_ID, MotorType.kBrushless);
+    wristMotor = new SparkFlex(WRIST_ID, MotorType.kBrushless);
 
     intakeEncoder = intakeMotor.getEncoder();
     throughBore = new DutyCycleEncoder(WRIST_ENCODER_ID);
 
     wristPID = wristMotor.getClosedLoopController();
 
-    intakeConfig = new SparkMaxConfig();
-    wristConfig = new SparkMaxConfig();
+    intakeConfig = new SparkFlexConfig();
+    wristConfig = new SparkFlexConfig();
 
     intakeConfig
       .idleMode(IdleMode.kBrake)

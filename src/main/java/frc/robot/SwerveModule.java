@@ -13,7 +13,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.config.*;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig;
-import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -40,11 +40,11 @@ import com.revrobotics.PersistMode;
 
 public class SwerveModule {
 
-    private SparkMax driveMotor;
-    private SparkMax rotateMotor;
+    private SparkFlex driveMotor;
+    private SparkFlex rotateMotor;
 
-    private SparkMaxConfig driveConfig;
-    private SparkMaxConfig rotateConfig;
+    private SparkFlexConfig driveConfig;
+    private SparkFlexConfig rotateConfig;
 
     private RelativeEncoder driveEncoder;
     private RelativeEncoder rotateEncoder;
@@ -66,11 +66,11 @@ public class SwerveModule {
 
     public SwerveModule (int driveID, int rotateID, int CANCoderPort, boolean invertRotate, boolean invertDrive, String label, double diameter){
 
-        driveMotor = new SparkMax(driveID, MotorType.kBrushless);
-        rotateMotor = new SparkMax(rotateID, MotorType.kBrushless);
+        driveMotor = new SparkFlex(driveID, MotorType.kBrushless);
+        rotateMotor = new SparkFlex(rotateID, MotorType.kBrushless);
 
-        driveConfig = new SparkMaxConfig();
-        rotateConfig = new SparkMaxConfig();
+        driveConfig = new SparkFlexConfig();
+        rotateConfig = new SparkFlexConfig();
 
         driveConfig
             .smartCurrentLimit(60)
@@ -118,7 +118,7 @@ public class SwerveModule {
         rotateConfig.closedLoop.i(DriveConstants.ROTATE_PID_VALUES[1]);
         rotateConfig.closedLoop.d(DriveConstants.ROTATE_PID_VALUES[2]);
 
-        /*Configures drive and rotate motors with there SparkMaxConfig */
+        /*Configures drive and rotate motors with there SparkFlex Config */
 
         driveMotor.configure(driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         rotateMotor.configure(rotateConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);

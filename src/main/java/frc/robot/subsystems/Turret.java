@@ -10,9 +10,9 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkFlexConfig;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -22,8 +22,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.TurretConstants;
 
 public class Turret extends SubsystemBase {
-  private SparkMax turretMotor;
-  private SparkMaxConfig turretConfig;
+  private SparkFlex turretMotor;
+  private SparkFlexConfig turretConfig;
   private RelativeEncoder turretEncoder;
   private SparkClosedLoopController turretController;
 
@@ -32,8 +32,8 @@ public class Turret extends SubsystemBase {
 
   /** Creates a new Turret. */
   public Turret() {
-    turretMotor = new SparkMax(TurretConstants.TURRET_ID, MotorType.kBrushless);
-    turretConfig = new SparkMaxConfig();
+    turretMotor = new SparkFlex(TurretConstants.TURRET_ID, MotorType.kBrushless);
+    turretConfig = new SparkFlexConfig();
 
     turretEncoder = turretMotor.getEncoder();
     turretController = turretMotor.getClosedLoopController();

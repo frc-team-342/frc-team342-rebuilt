@@ -10,10 +10,10 @@ import frc.robot.subsystems.Spindexer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -22,17 +22,17 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.PersistMode;
 
 public class Shooter extends SubsystemBase {
-  private SparkMax topShooterMotor;
-  private SparkMax bottomShooterMotor;
-  private SparkMax feederMotor;
+  private SparkFlex topShooterMotor;
+  private SparkFlex bottomShooterMotor;
+  private SparkFlex feederMotor;
 
   private RelativeEncoder topShooterEncoder;
   private RelativeEncoder bottomShooterEncoder;
   private RelativeEncoder feederEncoder;
 
-  private SparkMaxConfig topShooterMotorConfig;
-  private SparkMaxConfig bottomShooterMotorConfig;
-  private SparkMaxConfig feederMotorConfig;
+  private SparkFlexConfig topShooterMotorConfig;
+  private SparkFlexConfig bottomShooterMotorConfig;
+  private SparkFlexConfig feederMotorConfig;
 
   private SparkClosedLoopController topShooterPID;
   private SparkClosedLoopController bottomShooterPID;
@@ -44,17 +44,17 @@ public class Shooter extends SubsystemBase {
   private PhotonVision photonVision;
   /** Creates a new Shooter. */
   public Shooter(Spindexer spindexer, PhotonVision photonVision) {
-    topShooterMotor = new SparkMax(TOP_SHOOTER_MOTOR_ID, MotorType.kBrushless);
-    bottomShooterMotor =  new SparkMax(BOTTOM_SHOOTER_MOTOR_ID, MotorType.kBrushless);
-    feederMotor = new SparkMax(FEEDER_MOTOR_ID, MotorType.kBrushless);
+    topShooterMotor = new SparkFlex(TOP_SHOOTER_MOTOR_ID, MotorType.kBrushless);
+    bottomShooterMotor =  new SparkFlex(BOTTOM_SHOOTER_MOTOR_ID, MotorType.kBrushless);
+    feederMotor = new SparkFlex(FEEDER_MOTOR_ID, MotorType.kBrushless);
 
     topShooterEncoder = topShooterMotor.getEncoder();
     bottomShooterEncoder = bottomShooterMotor.getEncoder();
     feederEncoder = feederMotor.getEncoder();
 
-    topShooterMotorConfig = new SparkMaxConfig();
-    bottomShooterMotorConfig = new SparkMaxConfig();
-    feederMotorConfig = new SparkMaxConfig();
+    topShooterMotorConfig = new SparkFlexConfig();
+    bottomShooterMotorConfig = new SparkFlexConfig();
+    feederMotorConfig = new SparkFlexConfig();
 
     topShooterPID = topShooterMotor.getClosedLoopController();
     bottomShooterPID = bottomShooterMotor.getClosedLoopController();
