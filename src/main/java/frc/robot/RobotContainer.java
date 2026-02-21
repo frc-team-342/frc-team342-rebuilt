@@ -64,8 +64,8 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     photonVision = new PhotonVision();
-    swere = new SwerveDrive();
     turret = new Turret(swere);
+    swere = new SwerveDrive(photonVision);
     intake = new Intake();
     spindexer = new Spindexer();
     shooter = new Shooter(spindexer, photonVision);
