@@ -141,6 +141,8 @@ public final class Constants {
     public static final double WRIST_ENCODER_ZERO_OFFSET = 0.0;
 
     public static final double WRIST_ALLOWED_ERROR = 0.0;
+    public static final double WRIST_DOWN_POSITION = 0.0;
+    public static final double WRIST_UP_POSITION = 0.0;
     
     public static final double[] WRIST_PID_VALUES = {0.0, 0.0, 0.0};
   }
