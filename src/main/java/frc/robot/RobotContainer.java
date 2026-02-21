@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.DriveWithJoystick;
@@ -16,6 +17,7 @@ import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
+import frc.robot.Constants.IntakeConstants.*;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.CustomXboxController;
@@ -24,8 +26,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -47,6 +49,10 @@ public class RobotContainer {
 
   private final JoystickButton fieldOrientedButton;
   private final JoystickButton turretToggleButton;
+  private final JoystickButton shootButton;
+  private final JoystickButton reverseIntakeButton;
+  private final POVButton wristDownButton;
+  private final POVButton wristUpButton;
 
   private final DriveWithJoystick driveWithJoystick;
   private final MoveWristWithJoystick moveWristWithJoystick;
@@ -54,8 +60,10 @@ public class RobotContainer {
   private final Command toggleFieldOriented;
   private final Command turretToAngle;
   private final Command toggleManualTurret;
-  private final Command intakeFuel;
+  private final Command wristDown;
+  private final Command wristUp;
   private final Command getFuelUnstuck;
+  private final Command shoot;
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
@@ -64,8 +72,8 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     photonVision = new PhotonVision();
-    turret = new Turret(swere);
     swere = new SwerveDrive(photonVision);
+    turret = new Turret(swere);
     intake = new Intake();
     spindexer = new Spindexer();
     shooter = new Shooter(spindexer, photonVision);
@@ -76,14 +84,20 @@ public class RobotContainer {
     toggleFieldOriented = Commands.runOnce(() -> {swere.toggleFieldOriented();}, swere);
     toggleManualTurret = Commands.runOnce(() -> {turret.toggleManual();}, turret);
     turretToAngle = Commands.run(() -> {turret.turretToAngle(photonVision.getYawToHub().get(), operator);});
-    intakeFuel = Commands.run(() -> {intake.spinIntake(0);}, intake);
-    getFuelUnstuck = Commands.run(() -> {intake.spinIntake(0);}, intake);
+    wristDown = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_DOWN_POSITION), intake).alongWith(Commands.run(() -> {intake.spinIntake(0.6);}, intake));
+    wristUp = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_UP_POSITION), intake).alongWith(Commands.run(() -> {intake.spinIntake(0);}, intake));
+    getFuelUnstuck = Commands.runEnd(() -> {intake.spinIntake(-0.6);}, () -> intake.stopIntake(), intake);
+    shoot = Commands.runEnd(() -> shooter.shootWithDistance(), () -> shooter.shootWithoutPID(0), shooter);
 
     driveWithJoystick = new DriveWithJoystick(swere, driver);
     moveWristWithJoystick = new MoveWristWithJoystick(intake, operator);
 
     fieldOrientedButton = new JoystickButton(driver, XboxController.Button.kA.value);
     turretToggleButton = new JoystickButton(operator, XboxController.Button.kStart.value);
+    shootButton = new JoystickButton(operator, XboxController.Button.kRightBumper.value);
+    reverseIntakeButton = new JoystickButton(operator, XboxController.Button.kLeftBumper.value);
+    wristDownButton = new POVButton(operator, 180);
+    wristUpButton = new POVButton(operator, 0);
 
     swere.setDefaultCommand(driveWithJoystick);
     turret.setDefaultCommand(turretToAngle);
@@ -118,6 +132,10 @@ public class RobotContainer {
     m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
     fieldOrientedButton.onTrue(toggleFieldOriented); // 'A' button
     turretToggleButton.onTrue(toggleManualTurret); // 'Start' button
+    shootButton.whileTrue(shoot);
+    wristUpButton.onTrue(wristUp);
+    wristDownButton.onTrue(wristDown);
+    reverseIntakeButton.whileTrue(getFuelUnstuck);
   }
 
   /**
