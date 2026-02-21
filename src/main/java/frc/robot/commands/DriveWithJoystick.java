@@ -23,7 +23,6 @@ public class DriveWithJoystick extends Command {
   public DriveWithJoystick(SwerveDrive swerve, XboxController joyStick) {
 
     this.swerve = swerve;
-    DriveAssist = swerve.getDriveAssist();
     this.joyStick = joyStick;
     addRequirements(swerve);
 
