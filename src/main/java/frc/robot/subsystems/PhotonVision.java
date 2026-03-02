@@ -241,7 +241,7 @@ public class PhotonVision extends SubsystemBase {
     int numCamsUsed = 0;
     double yaw = 0;
 
-    for(int i = 0; i < allCameras.length; i++) {
+    for(int i = 1; i < allCameras.length; i++) {
       if(allCameras[i].getRobotPose3d().isPresent()) {
         yaw += allCameras[i].getRobotToTagYaw(tag).get();
         numCamsUsed++;
@@ -260,7 +260,7 @@ public class PhotonVision extends SubsystemBase {
     int numCamsUsed = 0;
     double pitch = 0;
 
-    for(int i = 0; i < allCameras.length; i++) {
+    for(int i = 1; i < allCameras.length; i++) {
       if(allCameras[i].getRobotPose3d().isPresent()) {
         pitch += allCameras[i].getRobotToTagPitch(tag).get();
         numCamsUsed++;
@@ -282,11 +282,11 @@ public class PhotonVision extends SubsystemBase {
     double robotPitch = 0;
     double robotYaw = 0;
 
-    for(int i = 0; i < allCameras.length; i++) {
+    for(int i = 1; i < allCameras.length; i++) {
       allCameras[i].updateRobotPose();
     }
 
-    for(int i = 0; i < allCameras.length; i++) {
+    for(int i = 1; i < allCameras.length; i++) {
       if(allCameras[i].getRobotPose3d().isPresent()) {
         robotX += allCameras[i].getRobotX().get();
         robotY += allCameras[i].getRobotY().get();

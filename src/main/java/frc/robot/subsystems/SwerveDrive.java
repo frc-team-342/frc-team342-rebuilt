@@ -144,7 +144,7 @@ public class SwerveDrive extends SubsystemBase {
         /* Initalize NavX (Gyro) */
         NavX = new AHRS(AHRS.NavXComType.kMXP_SPI);
 
-        NavX.setAngleAdjustment(DriveConstants.NAVX_OFFSET);
+        NavX.setAngleAdjustment(68.480001227);
   
         /* Initalizes Odometry */
         odometry = new SwerveDriveOdometry( 
@@ -177,6 +177,7 @@ public class SwerveDrive extends SubsystemBase {
         driveAssist = false;
   
         configureAutoBuilder();
+        syncEncoders();
     }
 
     /**Checks if the driver station is set to red alliance.
@@ -340,7 +341,7 @@ public class SwerveDrive extends SubsystemBase {
      * @return The yaw in radians.
      */
     public double  gyroRad(){
-      return (NavX.getAngle() * Math.PI/180) + 0.7986626364;
+      return (NavX.getAngle() * Math.PI/180);
     }
 
     /**Resets the pose2d of the robot. This sets everything to 0.
@@ -370,6 +371,13 @@ public class SwerveDrive extends SubsystemBase {
      */
     public void spinBR(){
       backRightModule.spinRotate();
+    }
+
+    public void syncEncoders() {
+      frontRightModule.syncEncoders();
+      frontLeftModule.syncEncoders();
+      backRightModule.syncEncoders();
+      backLeftModule.syncEncoders();
     }
 
     /**Configures the auto builder for PathPlanner.
