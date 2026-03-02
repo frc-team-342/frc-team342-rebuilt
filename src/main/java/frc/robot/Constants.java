@@ -43,15 +43,15 @@ public final class Constants {
     public static final double TAG_CUTOFF_DISTANCE = 5.0;
 
     //Get all these values after cameras are put on robot
-    public static final Translation3d TURRET_CAMERA_TRANSLATION_3D = new Translation3d(0, 0, 0);
-    public static final Translation3d ROBOT_RIGHT_CAMERA_TRANSLATION_3D = new Translation3d(0, 0, 0);
-    public static final Translation3d ROBOT_LEFT_CAMERA_TRANSLATION_3D = new Translation3d(0, 0, 0);
-    public static final Translation3d ROBOT_BACK_CAMERA_TRANSLATION_3D = new Translation3d(0, 0, 0);
+    public static final Translation3d TURRET_CAMERA_TRANSLATION_3D = new Translation3d(0, 0, 0); //zero, because it's not used for pose estimation (and it's changing constantly if turret is moving)
+    public static final Translation3d ROBOT_RIGHT_CAMERA_TRANSLATION_3D = new Translation3d(0.314, -0.314, 0.629);
+    public static final Translation3d ROBOT_LEFT_CAMERA_TRANSLATION_3D = new Translation3d(0.314, 0.314, 0.629);
+    public static final Translation3d ROBOT_BACK_CAMERA_TRANSLATION_3D = new Translation3d(-0.296, -0.046, 0.492);
 
-    public static final Rotation3d TURRET_CAMERA_ROTATION_3D = new Rotation3d(0, 0, 0);
-    public static final Rotation3d ROBOT_RIGHT_CAMERA_ROTATION_3D = new Rotation3d(0, 0, 0);
-    public static final Rotation3d ROBOT_LEFT_CAMERA_ROTATION_3D = new Rotation3d(0, 0, 0);
-    public static final Rotation3d ROBOT_BACK_CAMERA_ROTATION_3D = new Rotation3d(0, 0, 0);
+    public static final Rotation3d TURRET_CAMERA_ROTATION_3D = new Rotation3d(0, 0, 0); //zero, because it's not used for pose estimation (and it's changing constantly if turret is moving)
+    public static final Rotation3d ROBOT_RIGHT_CAMERA_ROTATION_3D = new Rotation3d(Math.PI/2, -1.023, -0.785);
+    public static final Rotation3d ROBOT_LEFT_CAMERA_ROTATION_3D = new Rotation3d(Math.PI/2, -1.023, -0.785);
+    public static final Rotation3d ROBOT_BACK_CAMERA_ROTATION_3D = new Rotation3d(0, -1.047, Math.PI);
 
     public static final Transform3d TURRET_CAMERA_TRANSFORM_3D = new Transform3d(TURRET_CAMERA_TRANSLATION_3D, TURRET_CAMERA_ROTATION_3D);
     public static final Transform3d ROBOT_RIGHT_CAMERA_TRANSFORM_3D = new Transform3d(ROBOT_RIGHT_CAMERA_TRANSLATION_3D, ROBOT_RIGHT_CAMERA_ROTATION_3D);
@@ -140,7 +140,7 @@ public final class Constants {
 
     public static final double WRIST_ALLOWED_ERROR = 0.05;
     public static final double WRIST_DOWN_POSITION = 5.84;
-    public static final double WRIST_UP_POSITION = 0.1;
+    public static final double WRIST_UP_POSITION = 0.3;
     public static final double WRIST_MIDDLE_POSITION = 2.535;
     
     public static final double[] WRIST_PID_VALUES_SLOT0 = {0.2, 0.0, 0.02};
