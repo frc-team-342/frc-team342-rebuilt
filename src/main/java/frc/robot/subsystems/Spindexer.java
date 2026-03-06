@@ -22,6 +22,7 @@ public class Spindexer extends SubsystemBase {
   private SparkFlexConfig spindexerConfig;
   
   private boolean isShooting;
+  private boolean shooterUpToSpeed;
   /** Creates a new Spindexer. */
   public Spindexer() {
     spindexer = new SparkFlex(SPINDEXER_ID, MotorType.kBrushless);
@@ -34,6 +35,7 @@ public class Spindexer extends SubsystemBase {
       spindexer.configure(spindexerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     isShooting = false;
+    shooterUpToSpeed = false;
   }
 
   /**
@@ -48,6 +50,21 @@ public class Spindexer extends SubsystemBase {
    */
   public boolean getShooting(){
     return isShooting;
+  }
+
+  /**Sets shooterUpToSpeed to the inputted boolean value.
+   * 
+   */
+  public void setAtDesiredSpeed(boolean atDesiredSpeed) {
+    shooterUpToSpeed = atDesiredSpeed;
+  }
+
+  /**Checks if the shooter is at the desired speed.
+   * 
+   * @return {@code true} if the shooter is up to speed, {@code false} otherwise.
+   */
+  public boolean AtDesiredSpeed() {
+    return shooterUpToSpeed;
   }
 
   /**
@@ -74,7 +91,7 @@ public class Spindexer extends SubsystemBase {
    * @return Returns a command for running the spindexer
    */
   public Command runSpindexer(){
-    return new WaitCommand(.5).andThen(() -> spinSpindexer(), this);
+    return new WaitCommand(0.75).andThen(() -> spinSpindexer(), this);
   }
 
   public double getSpindexerVelocity() {

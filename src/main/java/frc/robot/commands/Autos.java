@@ -8,6 +8,8 @@ import frc.robot.subsystems.ExampleSubsystem;
 
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.Shooter;
@@ -39,11 +41,17 @@ public final class Autos {
     return shooter.runBottombottomShooterSysID();
   }
 
+  public static Command swerveSysID(SwerveDrive swerve) {
+    return swerve.runSwerveSysID();
+  }
+
   public static Command basicCenterAuto(SwerveDrive swerve, Shooter shooter, Intake intake){
     return Commands.sequence(
-      new PathPlannerAuto("Basic Center Auto"),
-      Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_MIDDLE_POSITION), intake).withTimeout(0.5),
-      Commands.run(() -> shooter.shootWithSpeed(-1500, -2200, 1), shooter)
+      Commands.runOnce(() -> swerve.setPose(new Pose2d(3.537, 4.0, new Rotation2d(90)))),
+      new PathPlannerAuto("Basic Center Auto")
+      // Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_MIDDLE_POSITION), intake).withTimeout(0.5),
+      // Commands.run(() -> shooter.shootWithSpeed(-1500, -2200, 1), shooter)
+      // Commands.run(() -> shooter.shootWithDistance(1), shooter).withTimeout(8)
     ); 
   }
   public static Command basicLeftAuto(SwerveDrive swerve, Shooter shooter){

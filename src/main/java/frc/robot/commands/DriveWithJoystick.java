@@ -30,7 +30,7 @@ public class DriveWithJoystick extends Command {
     this.swerve = swerve;
     this.joyStick = joyStick;
     this.photonVision = photonVision;
-    visionController = new PIDController(0.5, 0, 0);
+    visionController = new PIDController(0.2, 0, 0);
     addRequirements(swerve);
   }
 

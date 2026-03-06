@@ -7,7 +7,9 @@ package frc.robot;
 /** Add your docs here. */
 public class AprilTagIDs {
 
-    //Holds all IDs for the hub
+    /**Holds all IDs for the hub.
+     * 
+     */
     public enum hubTagsIDs {
         FRONT_CENTER(25, 9),
         FRONT_OFFSET(26, 10),
@@ -26,18 +28,56 @@ public class AprilTagIDs {
             this.redHubTagID = redHubTagID;
         }
 
-        //Gets the ID for hub tag when on blue alliance
+        /**
+         * Gets the ID for hub tag when on blue alliance.
+         */
         public int getBlueHubTagID() {
             return blueHubTagID;
         }
 
-        //Gets the ID for hub tag when on red alliance
+        /**
+         * Gets the ID for hub tag when on red alliance.
+         */
         public int getRedHubTagID() {
             return redHubTagID;
         }
     }
 
-    //Holds all IDs for the outpost
+    /**Holds all center tag IDs for the hub.
+     * 
+     */
+    public enum centerHubTagsIDs {
+        FRONT(25, 9),
+        RIGHT(27, 11),
+        LEFT(21, 5),
+        BACK(19, 3);
+
+        private int centerBlueHubTagID;
+        private int centerRedHubTagID;
+
+        centerHubTagsIDs(int centerBlueHubTagID, int centerRedHubTagID) {
+            this.centerBlueHubTagID = centerBlueHubTagID;
+            this.centerRedHubTagID = centerRedHubTagID;
+        }
+
+        /**Gets the ID for center hub tag when on red alliance.
+         * 
+         */
+        public int getCenterRedHubTagID() {
+            return centerRedHubTagID;
+        }
+
+        /**Gets the ID for center hub tag when on blue alliance.
+         * 
+         */
+        public int getCenterBlueHubTagID() {
+            return centerBlueHubTagID;
+        }
+    }
+
+    /**Holds all IDs for the outpost.
+     * 
+     */
     public enum outpostTagsIDs {
         CENTER(29, 13),
         OFFSET(30, 14);
@@ -50,18 +90,24 @@ public class AprilTagIDs {
             this.redOutpostTagID = redOutpostTagID;
         }
 
-        //Gets the ID for outpost tag when on blue alliance
+        /**Gets the ID for outpost tag when on blue alliance.
+         * 
+         */
         public int getBlueOutpostTagID() {
             return blueOutpostTagID;
         }
 
-        //Gets the ID for outpost tag when on red alliance
+        /**Gets the ID for outpost tag when on red alliance.
+         * 
+         */
         public int getRedOutpostTagID() {
             return redOutpostTagID;
         }
     }
 
-    //Holds all IDs for the tower
+    /**Holds all IDs for the tower.
+     * 
+     */
     public enum towerTagsIDs {
         CENTER(31, 15),
         OFFSET(32, 16);
@@ -74,12 +120,16 @@ public class AprilTagIDs {
             this.redTowerTagID = redTowerTagID;
         }
 
-        //Gets the ID for tower tag when on blue alliance
+        /**Gets the ID for tower tag when on blue alliance.
+         * 
+         */
         public int getBlueTowerTagID() {
             return blueTowerTagID;
         }
 
-        //Gets the ID for tower tag when on red alliance
+        /**Gets the ID for tower tag when on red alliance.
+         * 
+         */
         public int getRedTowerTagID() {
             return redTowerTagID;
         }
