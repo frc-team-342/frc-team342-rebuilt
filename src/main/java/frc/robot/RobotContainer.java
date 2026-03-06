@@ -105,7 +105,7 @@ public class RobotContainer {
     wristUp = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_UP_POSITION), intake);
     wristMiddle = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_MIDDLE_POSITION), intake);
     getFuelUnstuck = Commands.runEnd(() -> {intake.spinIntake(0.6);}, () -> intake.stopIntake(), intake);
-    intakeFuel = Commands.runEnd(() -> {intake.spinIntake(-0.5);}, () -> intake.stopIntake(), intake);
+    intakeFuel = Commands.runEnd(() -> {intake.spinIntake(-1);}, () -> intake.stopIntake(), intake);
     shoot = Commands.runEnd(() -> shooter.shootWithDistance(1), () -> shooter.stopShooterAndFeeder(), shooter);
     
     // turretShoot = Commands.runEnd(() -> shooter.shootWithoutPID(-0.17, -0.52, 1), () -> shooter.stopShooterAndFeeder(), shooter);
@@ -131,9 +131,16 @@ public class RobotContainer {
 
     autoChooser = new SendableChooser<>();
 
+    NamedCommands.registerCommand("Shoot Command", Commands.run(() -> shooter.shootWithSpeed(-1500, -2200, 1), shooter));
+    NamedCommands.registerCommand("Wrist Down", wristDown);
+    NamedCommands.registerCommand("Wrist Up", wristUp);
+    NamedCommands.registerCommand("Wrist Middle", Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_MIDDLE_POSITION), intake).withTimeout(0.5));
+    NamedCommands.registerCommand("Intake", intakeFuel);
+
     autoChooser.addOption("Top Shooter Sys ID", Autos.topShooterSysID(shooter));
     autoChooser.addOption("Bottom Shooter Sys ID", Autos.bottomShooterSysID(shooter));
-    autoChooser.addOption("Basic Center Auto", Autos.basicCenterAuto(swere, shooter,intake ));
+    autoChooser.addOption("Swerve Sys ID", Autos.swerveSysID(swere));
+    autoChooser.addOption("Basic Center Auto", Autos.basicCenterAuto(swere, shooter,intake));
     autoChooser.addOption("Basic Left Auto", Autos.basicLeftAuto(swere, shooter));
     autoChooser.addOption("Basic Right Auto", Autos.basicRightAuto(swere, shooter));
     autoChooser.addOption("Right Outpost Shoot", Autos.rightOutpostShoot(swere, shooter));
@@ -149,12 +156,6 @@ public class RobotContainer {
     SmartDashboard.putData(shooter);
     SmartDashboard.putData(intake);
     SmartDashboard.putData(autoChooser);
-
-    NamedCommands.registerCommand("Shoot Command", turretShoot);
-    NamedCommands.registerCommand("Wrist Down", wristDown);
-    NamedCommands.registerCommand("Wrist Up", wristUp);
-    NamedCommands.registerCommand("Wrist Middle", wristMiddle);
-    NamedCommands.registerCommand("Intake", intakeFuel);
 
     // Configure the trigger bindings
     configureBindings();

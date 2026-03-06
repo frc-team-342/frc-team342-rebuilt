@@ -26,6 +26,7 @@ public class Camera {
     private List<PhotonPipelineResult> cameraResults;
     private Pose3d pose;
     private PhotonTrackedTarget trackedHubTag;
+    private boolean currentlyTrackingHub;
 
     /**
      * Creates a new Camera.
@@ -40,6 +41,7 @@ public class Camera {
         pose = new Pose3d();
 
         trackedHubTag = new PhotonTrackedTarget();
+        currentlyTrackingHub = false;
     }
 
     /**Updates the pose3d of the robot.
@@ -294,6 +296,37 @@ public class Camera {
         }
 
         return false;
+    }
+
+    /**Checks if the current tracked hub tag is the centered tag.
+     * 
+     * @return {@code true} if the tag is centered, {@code false} otherwise.
+     */
+    public boolean trackedHubTagIsCentered() {
+        if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
+            for(centerHubTagsIDs tagID : centerHubTagsIDs.values()) {
+                if(trackedHubTag.getFiducialId() == tagID.getCenterRedHubTagID()) {
+                    return true;
+                }
+            }
+        }else{
+            for(centerHubTagsIDs tagID : centerHubTagsIDs.values()) {
+                if(trackedHubTag.getFiducialId() == tagID.getCenterBlueHubTagID()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**Checks if the hub is currently being checked.
+     * This is determined by if a centered hub tag is currently being seen.
+     * 
+     * @return {@code true} if tracking, {@code false} otherwise.
+     */
+    public boolean isTrackingHub() {
+        return currentlyTrackingHub;
     }
 
     /**Gets the hub tag that is currently being seen.

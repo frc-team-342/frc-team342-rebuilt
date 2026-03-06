@@ -153,6 +153,10 @@ public class SwerveModule {
         return rotateEncoder.getPosition();
     }
 
+    public double getDrivePosition() {
+        return driveEncoder.getPosition();
+    }
+
     /* Returns the Angle of the wheels in Radians */
     public double getRotateEncoderPosition(){
         
@@ -191,6 +195,10 @@ public class SwerveModule {
         rotateMotor.set(0.2);
     }
 
+    public void setDriveVoltage(double voltage) {
+        driveMotor.set(voltage);
+    }
+
     /* Returns the Label of specified module */
     public String printLabel() {
         return label;
@@ -212,6 +220,10 @@ public class SwerveModule {
 
     public double getVelocityConversion(){
         return driveVelConversion;
+    }
+
+    public double getDriveVoltage() {
+        return driveMotor.getAppliedOutput() * driveMotor.getBusVoltage();
     }
  
     /* Sets the refrence of drive and rotate motor */

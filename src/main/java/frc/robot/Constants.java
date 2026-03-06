@@ -109,7 +109,7 @@ public final class Constants {
 
     public static final PPHolonomicDriveController PATH_CONFIG_CONTROLLER = new PPHolonomicDriveController(
       new PIDConstants(1, 0, 0.7),
-      new PIDConstants(0.25, 0, 0.3)
+      new PIDConstants(1.2, 0, 0.55)
     );
 
     //NavX angle adjustment (degrees)
@@ -154,7 +154,7 @@ public final class Constants {
     public static final int BOTTOM_FEEDER_MOTOR_ID = 16;
     public static final int TOP_FEEDER_MOTOR_ID = 20;
 
-    public static final int SHOOTER_VELOCITY_ERROR = 10;
+    public static final int SHOOTER_VELOCITY_ERROR = 50;
 
     public static final double[] TOP_SHOOTER_PID_VALUES = {0, 0, 0}; //All values are zero because it was running perfectly with only ff
     public static final double[] TOP_SHOOTER_SVA_VALUES = {0.13158, 0.0018075, 0.00017599};

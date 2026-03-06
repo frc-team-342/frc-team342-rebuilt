@@ -85,6 +85,7 @@ public class Shooter extends SubsystemBase {
       .smartCurrentLimit(60);
     
     topShooterMotorConfig.closedLoop
+      .allowedClosedLoopError(SHOOTER_VELOCITY_ERROR, ClosedLoopSlot.kSlot0)
       .pid(TOP_SHOOTER_PID_VALUES[0], TOP_SHOOTER_PID_VALUES[1], TOP_SHOOTER_PID_VALUES[2], ClosedLoopSlot.kSlot0)
       .feedForward.sva(TOP_SHOOTER_SVA_VALUES[0], TOP_SHOOTER_SVA_VALUES[1], TOP_SHOOTER_SVA_VALUES[2]);
     
@@ -93,6 +94,7 @@ public class Shooter extends SubsystemBase {
       .smartCurrentLimit(60);
 
     bottomShooterMotorConfig.closedLoop
+      .allowedClosedLoopError(SHOOTER_VELOCITY_ERROR, ClosedLoopSlot.kSlot0)
       .pid(BOTTOM_SHOOTER_PID_VALUES[0], BOTTOM_SHOOTER_PID_VALUES[1], BOTTOM_SHOOTER_PID_VALUES[2], ClosedLoopSlot.kSlot0)
       .feedForward.sva(BOTTOM_SHOOTER_SVA_VALUES[0], BOTTOM_SHOOTER_SVA_VALUES[1], BOTTOM_SHOOTER_SVA_VALUES[2]);
 
@@ -113,7 +115,10 @@ public class Shooter extends SubsystemBase {
     bottomShooterMap = new InterpolatingDoubleTreeMap();
 
     //TODO: insert more values after testing
-    put(0.0, 0.0, 0.0);
+    put(2, -2200, -1750);
+    put(3, -2500, -1900);
+    put(4, -2700, -1900);
+    put(5, -3200, -1900);
 
     this.spindexer = spindexer;
     spindexer.setShooting(false);
@@ -287,6 +292,7 @@ public class Shooter extends SubsystemBase {
     bottomShooterPID.setSetpoint(getBottomTargetRPM(photonVision.getDistanceToHub().get()), ControlType.kVelocity);
     feed(speed);
     spindexer.setShooting(true);
+    spindexer.setAtDesiredSpeed(topShooterPID.isAtSetpoint() && bottomShooterPID.isAtSetpoint());
   }
 
   /**Sets the target velocity of both shooter motors to the given velocity.
@@ -301,6 +307,7 @@ public class Shooter extends SubsystemBase {
     bottomShooterPID.setSetpoint(bottomShooterSpeed, ControlType.kVelocity);
     feed(feederSpeed);
     spindexer.setShooting(true);
+    spindexer.setAtDesiredSpeed(topShooterPID.isAtSetpoint() && bottomShooterPID.isAtSetpoint());
   }
 
   /**Sets both shooter motors to the given speed.

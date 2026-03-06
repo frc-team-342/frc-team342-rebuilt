@@ -13,6 +13,7 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.photonvision.targeting.PhotonPipelineResult;
@@ -33,6 +34,7 @@ public class PhotonVision extends SubsystemBase {
 
   private Pose3d pose3d;
   private Pose2d pose2d;
+  private Pose2d turretPose2d;
 
   private Field2d field;
 
@@ -51,6 +53,7 @@ public class PhotonVision extends SubsystemBase {
 
     pose3d = new Pose3d();
     pose2d = new Pose2d();
+    turretPose2d = new Pose2d();
 
     field = new Field2d();
   }
@@ -184,6 +187,14 @@ public class PhotonVision extends SubsystemBase {
     return Optional.of(getRobotPose3d().get().toPose2d());
   }
 
+  /**Gets the pose2d of the turret.
+   * 
+   * @return The pose2d of the turret.
+   */
+  public Optional<Pose2d> getTurretPose2d() {
+    return Optional.of(turretPose2d);
+  }
+
   /**Gets the X of the robot.
    * 
    * @return The X of the robot.
@@ -299,17 +310,26 @@ public class PhotonVision extends SubsystemBase {
       }
     }
 
-    robotX /= numPosesUsed;
-    robotY /= numPosesUsed;
-    robotZ /= numPosesUsed;
-    robotRoll /= numPosesUsed;
-    robotPitch /= numPosesUsed;
-    robotYaw /= numPosesUsed;
+    robotX = robotX / numPosesUsed;
+    robotY = robotY / numPosesUsed;
+    robotZ = robotZ / numPosesUsed;
+    robotRoll = robotRoll / numPosesUsed;
+    robotPitch = robotPitch / numPosesUsed;
+    robotYaw = robotYaw / numPosesUsed;
 
     pose3d = new Pose3d(
       new Translation3d(robotX, robotY, robotZ),
       new Rotation3d(robotRoll, robotPitch, robotYaw)
     );
+  }
+
+  /**Updates the pose2d of the turret.
+   * 
+   */
+  public void updateTurretPose2d() {
+    allCameras[0].updateRobotPose();
+
+    turretPose2d = allCameras[0].getRobotPose2d().get();
   }
 
   /**Sets the robot pose3d to the given pose3d.
@@ -334,8 +354,8 @@ public class PhotonVision extends SubsystemBase {
    * If the robot pose2d or the hub tag is not present, this returns 0.0.
    */
   public Optional<Double> getDistanceToHub() {
-    if(getRobotPose2d().isPresent() && FIELD_LAYOUT.getTagPose(allCameras[0].getTrackedHubTag().get().getFiducialId()).isPresent()) {
-      return Optional.of(PhotonUtils.getDistanceToPose(getRobotPose2d().get(), FIELD_LAYOUT.getTagPose(allCameras[0].getTrackedHubTag().get().getFiducialId()).get().toPose2d()));
+    if(getTurretPose2d().isPresent() && FIELD_LAYOUT.getTagPose(allCameras[0].getTrackedHubTag().get().getFiducialId()).isPresent()) {
+      return Optional.of(PhotonUtils.getDistanceToPose(getTurretPose2d().get(), FIELD_LAYOUT.getTagPose(allCameras[0].getTrackedHubTag().get().getFiducialId()).get().toPose2d()));
     }
     
     return Optional.of(0.0);
@@ -347,7 +367,7 @@ public class PhotonVision extends SubsystemBase {
    * If the distance to the hub is not present, this returns 0.0.
    */
   public Optional<Double> getYawToHub() {
-    return getDistanceToHub().isPresent() ? Optional.of(allCameras[0].getYawToHub().get()) : Optional.of(0.0);
+    return getDistanceToHub().get() > 0.0 ? Optional.of(allCameras[0].getYawToHub().get()) : Optional.of(0.0);
   }
 
   //Puts data for vision on Elastic
@@ -372,6 +392,10 @@ public class PhotonVision extends SubsystemBase {
     builder.addDoubleProperty("Back Robot Camera Ambiguity", () -> allCameras[3].getPoseAmbiguity().get(), null);
     builder.addDoubleProperty("Distance to Hub", () -> getDistanceToHub().get(), null);
     builder.addDoubleProperty("Yaw to Hub", () -> getYawToHub().get(), null);
+    builder.addDoubleProperty("Tracked Hub Tag ID", () -> allCameras[0].getTrackedHubTag().get().getFiducialId(), null);
+    builder.addDoubleProperty("Turret X", () -> getTurretPose2d().get().getX(), null);
+    builder.addDoubleProperty("Turret Y", () -> getTurretPose2d().get().getY(), null);
+    builder.addDoubleProperty("Robot Voltage", () -> RobotController.getBatteryVoltage(), null);
     SmartDashboard.putData(field);
   }
 
@@ -379,6 +403,10 @@ public class PhotonVision extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     updatePose3d();
+    updateTurretPose2d();
+    
+    getDistanceToHub();
+    getYawToHub();
 
     setPose2d(getRobotPose2d().get());
 

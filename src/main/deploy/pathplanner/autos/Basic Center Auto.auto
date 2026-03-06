@@ -9,6 +9,18 @@
           "data": {
             "pathName": "Middle Start to Shoot"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Wrist Middle"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot Command"
+          }
         }
       ]
     }
