@@ -188,7 +188,8 @@ public class SwerveDrive extends SubsystemBase {
         driveAssist = false;
   
         configureAutoBuilder();
-        syncEncoders();
+        // syncEncoders();
+        // resetWheels();
 
         swerveSysIdRoutine = new SysIdRoutine(
           new Config(
@@ -333,6 +334,13 @@ public class SwerveDrive extends SubsystemBase {
         backLeftModule.stop();
         backRightModule.stop();
     }
+
+    // public void resetWheels() {
+    //   frontLeftModule.resetWheel();
+    //   frontRightModule.resetWheel();
+    //   backLeftModule.resetWheel();
+    //   backRightModule.resetWheel();
+    // }
 
     /**Gets the pose2d of the robot.
      * 

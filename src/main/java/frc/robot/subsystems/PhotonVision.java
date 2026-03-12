@@ -321,6 +321,30 @@ public class PhotonVision extends SubsystemBase {
       new Translation3d(robotX, robotY, robotZ),
       new Rotation3d(robotRoll, robotPitch, robotYaw)
     );
+
+    /**Updates the robot pose3d using the best pose from the cameras.
+     * Best pose is determined by ambiguity.
+     */
+
+    // Pose3d bestPose = null;
+    // double lowestAmbiguity = 10;
+
+    // for(int i = 1; i < allCameras.length; i++) {
+    //   allCameras[i].updateRobotPose();
+
+    //   if(allCameras[i].getRobotPose3d().isPresent()) {
+    //     if(allCameras[i].getPoseAmbiguity().get() != -1 && allCameras[i].getPoseAmbiguity().get() < lowestAmbiguity) {
+    //       bestPose = allCameras[i].getRobotPose3d().get();
+    //       lowestAmbiguity = allCameras[i].getPoseAmbiguity().get();
+    //     }
+    //   }
+    // }
+
+    // if(bestPose == null) {
+      
+    // }else{
+    //   pose3d = bestPose;
+    // }
   }
 
   /**Updates the pose2d of the turret.

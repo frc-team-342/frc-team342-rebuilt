@@ -6,7 +6,9 @@ package frc.robot;
 
 import org.opencv.core.Mat;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.revrobotics.*;
 import com.revrobotics.spark.*;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -53,6 +55,7 @@ public class SwerveModule {
     private SparkClosedLoopController rotateController;
     
     private CANcoder rotateAbsoluteEncoder;
+    private CANcoderConfiguration rotateAbsoluteEncoderConfig;
 
     //private PIDController rotatePID;
 
@@ -114,9 +117,10 @@ public class SwerveModule {
         rotateConfig.closedLoop.positionWrappingMaxInput(Math.PI);
 
          /* Rotate PID values */
-        rotateConfig.closedLoop.p(DriveConstants.ROTATE_PID_VALUES[0]);
-        rotateConfig.closedLoop.i(DriveConstants.ROTATE_PID_VALUES[1]);
-        rotateConfig.closedLoop.d(DriveConstants.ROTATE_PID_VALUES[2]);
+        rotateConfig.closedLoop.p(DriveConstants.ROTATE_PID_VALUES[0], ClosedLoopSlot.kSlot0);
+        rotateConfig.closedLoop.i(DriveConstants.ROTATE_PID_VALUES[1], ClosedLoopSlot.kSlot0);
+        rotateConfig.closedLoop.d(DriveConstants.ROTATE_PID_VALUES[2], ClosedLoopSlot.kSlot0);
+        // rotateConfig.closedLoop.pid(1.05, 0, 0.35, ClosedLoopSlot.kSlot1);
 
         /*Configures drive and rotate motors with there SparkFlex Config */
 
@@ -128,9 +132,15 @@ public class SwerveModule {
         /* Initializes the Analog Input and Analog Encoder. Analog Encoder acts as the absoulete encoder  */
         rotateAbsoluteEncoder = new CANcoder(CANCoderPort);
 
+        // rotateAbsoluteEncoderConfig = new CANcoderConfiguration();
+
+        // rotateAbsoluteEncoderConfig.MagnetSensor.MagnetOffset = 0;
+        // rotateAbsoluteEncoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
+
         swerveModuleState = new SwerveModuleState();
 
         syncEncoders();
+        // resetWheel();
     }
 
     /* Returns the distance robot has travlled in meters */
@@ -184,6 +194,11 @@ public class SwerveModule {
             angle = angle - 2 * Math.PI;
         }
          return angle;
+    }
+
+    public void resetWheel() {
+        // rotateController.setSetpoint(0, ControlType.kPosition, ClosedLoopSlot.kSlot1);
+        rotateController.setSetpoint(0, ControlType.kPosition);
     }
 
     /* Sets both motors too 0 */

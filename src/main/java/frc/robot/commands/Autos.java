@@ -47,7 +47,7 @@ public final class Autos {
 
   public static Command basicCenterAuto(SwerveDrive swerve, Shooter shooter, Intake intake){
     return Commands.sequence(
-      Commands.runOnce(() -> swerve.setPose(new Pose2d(3.537, 4.0, new Rotation2d(90)))),
+      Commands.runOnce(() -> swerve.setPose(new Pose2d(3.537, 4.0, new Rotation2d(0)))),
       new PathPlannerAuto("Basic Center Auto")
       // Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_MIDDLE_POSITION), intake).withTimeout(0.5),
       // Commands.run(() -> shooter.shootWithSpeed(-1500, -2200, 1), shooter)
@@ -55,7 +55,10 @@ public final class Autos {
     ); 
   }
   public static Command basicLeftAuto(SwerveDrive swerve, Shooter shooter){
-    return new PathPlannerAuto("Basic Left Auto");
+    return Commands.sequence(
+      Commands.runOnce(() -> swerve.setPose(new Pose2d(3.537, 5.574, new Rotation2d(0)))),
+      new PathPlannerAuto("Basic Left Auto")
+    );
   }
 
   public static Command basicRightAuto(SwerveDrive swerve, Shooter shooter){
