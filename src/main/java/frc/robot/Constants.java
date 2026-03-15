@@ -126,8 +126,8 @@ public final class Constants {
     public static final double TURRET_GEAR_RATIO = 12.5;
     public static final double TURRET_POSITION_CONVERSION = 360.0/TURRET_GEAR_RATIO;
 
-    public static final double TURRET_OFFSET_X = Units.inchesToMeters(-8.0); //According to Dylan; double check later
-    public static final double TURRET_OFFSET_Y = Units.inchesToMeters(-9.0); //Accodring to Dylan; double check later
+    public static final double TURRET_OFFSET_X = -0.131; //According to Dylan; double check later
+    public static final double TURRET_OFFSET_Y = 0.151; //Accodring to Dylan; double check later
   }
 
   public static class IntakeConstants{
@@ -161,5 +161,11 @@ public final class Constants {
 
     public static final double[] BOTTOM_SHOOTER_PID_VALUES = {0, 0, 0}; //All values are zero because it was running perfectly with only ff
     public static final double[] BOTTOM_SHOOTER_SVA_VALUES = {0.13709, 0.0017715, 0.00023884};
+
+    public static final double BOTTOM_SHOOTER_WHEEL_DIAMETERS = 4.0;
+    public static final double TOP_SHOOTER_WHEEL_DIAMETERS = 3.0;
+
+    public static final double BOTTOM_SHOOTER_VELOCITY_CONVERSION_FACTOR = ((BOTTOM_SHOOTER_WHEEL_DIAMETERS * 0.0254) * Math.PI) / 60;
+    public static final double TOP_SHOOTER_VELOCITY_CONVERSION_FACTOR = ((TOP_SHOOTER_WHEEL_DIAMETERS * 0.0254) * Math.PI) / 60;
   }
 }
