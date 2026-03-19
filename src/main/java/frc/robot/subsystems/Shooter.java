@@ -14,6 +14,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -145,7 +146,7 @@ public class Shooter extends SubsystemBase {
       new Config(
         Volts.of(2).per(Second),
         Volts.of(8),
-        Seconds.of(20)
+        Seconds.of(30)
       ),
       new Mechanism(
         (volts) -> topShooterMotor.setVoltage(volts.in(Volts)), null, this)
@@ -155,7 +156,7 @@ public class Shooter extends SubsystemBase {
       new Config(
         Volts.of(2).per(Second),
         Volts.of(8),
-        Seconds.of(20)
+        Seconds.of(30)
       ),
       new Mechanism(
         (volts) -> bottomShooterMotor.setVoltage(volts.in(Volts)), null, this)
@@ -262,12 +263,15 @@ public class Shooter extends SubsystemBase {
       topShooterSysIDRoutine
         .quasistatic(Direction.kForward)
         .withTimeout(5),
+      new WaitCommand(3),
       topShooterSysIDRoutine
         .quasistatic(Direction.kReverse)
         .withTimeout(5),
+      new WaitCommand(3),
       topShooterSysIDRoutine
         .dynamic(Direction.kForward)
         .withTimeout(5),
+      new WaitCommand(3),
       topShooterSysIDRoutine
         .dynamic(Direction.kReverse)
         .withTimeout(5)
@@ -283,12 +287,15 @@ public class Shooter extends SubsystemBase {
       bottomShooterSysIDRoutine
         .quasistatic(Direction.kForward)
         .withTimeout(5),
+      new WaitCommand(3),
       bottomShooterSysIDRoutine
         .quasistatic(Direction.kReverse)
         .withTimeout(5),
+      new WaitCommand(3),
       bottomShooterSysIDRoutine
         .dynamic(Direction.kForward)
         .withTimeout(5),
+      new WaitCommand(3),
       bottomShooterSysIDRoutine
         .dynamic(Direction.kReverse)
         .withTimeout(5)

@@ -72,7 +72,7 @@ public class Spindexer extends SubsystemBase {
    */
   public void spinSpindexer(){
     if(isShooting) {
-      spindexer.set(0.7);
+      spindexer.set(0.8);
     }
     else{
       spindexer.set(0);

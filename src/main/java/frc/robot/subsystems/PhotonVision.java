@@ -283,70 +283,66 @@ public class PhotonVision extends SubsystemBase {
     return Optional.of(pitch /= numCamsUsed);
   }
 
-  /**Calculates the average pose from all poses given by the cameras.
-   * The calculated pose is used to update the robot pose3d.
+  /**Updates the robot pose3d using the best pose from the cameras.
+   * Best pose is determined by ambiguity.
    */
   public void updatePose3d() {
-    int numPosesUsed = 0;
-    double robotX = 0;
-    double robotY = 0;
-    double robotZ = 0;
-    double robotRoll = 0;
-    double robotPitch = 0;
-    double robotYaw = 0;
-
-    for(int i = 1; i < allCameras.length; i++) {
-      allCameras[i].updateRobotPose();
-    }
-
-    for(int i = 1; i < allCameras.length; i++) {
-      if(allCameras[i].getRobotPose3d().isPresent()) {
-        robotX += allCameras[i].getRobotX().get();
-        robotY += allCameras[i].getRobotY().get();
-        robotZ += allCameras[i].getRobotZ().get();
-        robotRoll += allCameras[i].getRobotRoll().get();
-        robotPitch += allCameras[i].getRobotPitch().get();
-        robotYaw += allCameras[i].getRobotPitch().get();
-
-        numPosesUsed++;
-      }
-    }
-
-    robotX = robotX / numPosesUsed;
-    robotY = robotY / numPosesUsed;
-    robotZ = robotZ / numPosesUsed;
-    robotRoll = robotRoll / numPosesUsed;
-    robotPitch = robotPitch / numPosesUsed;
-    robotYaw = robotYaw / numPosesUsed;
-
-    pose3d = new Pose3d(
-      new Translation3d(robotX, robotY, robotZ),
-      new Rotation3d(robotRoll, robotPitch, robotYaw)
-    );
-
-    /**Updates the robot pose3d using the best pose from the cameras.
-     * Best pose is determined by ambiguity.
-     */
-
-    // Pose3d bestPose = null;
-    // double lowestAmbiguity = 10;
+    // int numPosesUsed = 0;
+    // double robotX = 0;
+    // double robotY = 0;
+    // double robotZ = 0;
+    // double robotRoll = 0;
+    // double robotPitch = 0;
+    // double robotYaw = 0;
 
     // for(int i = 1; i < allCameras.length; i++) {
     //   allCameras[i].updateRobotPose();
+    // }
 
+    // for(int i = 1; i < allCameras.length; i++) {
     //   if(allCameras[i].getRobotPose3d().isPresent()) {
-    //     if(allCameras[i].getPoseAmbiguity().get() != -1 && allCameras[i].getPoseAmbiguity().get() < lowestAmbiguity) {
-    //       bestPose = allCameras[i].getRobotPose3d().get();
-    //       lowestAmbiguity = allCameras[i].getPoseAmbiguity().get();
-    //     }
+    //     robotX += allCameras[i].getRobotX().get();
+    //     robotY += allCameras[i].getRobotY().get();
+    //     robotZ += allCameras[i].getRobotZ().get();
+    //     robotRoll += allCameras[i].getRobotRoll().get();
+    //     robotPitch += allCameras[i].getRobotPitch().get();
+    //     robotYaw += allCameras[i].getRobotPitch().get();
+
+    //     numPosesUsed++;
     //   }
     // }
 
-    // if(bestPose == null) {
+    // robotX = robotX / numPosesUsed;
+    // robotY = robotY / numPosesUsed;
+    // robotZ = robotZ / numPosesUsed;
+    // robotRoll = robotRoll / numPosesUsed;
+    // robotPitch = robotPitch / numPosesUsed;
+    // robotYaw = robotYaw / numPosesUsed;
+
+    // pose3d = new Pose3d(
+    //   new Translation3d(robotX, robotY, robotZ),
+    //   new Rotation3d(robotRoll, robotPitch, robotYaw)
+    // );
+
+    Pose3d bestPose = null;
+    double lowestAmbiguity = 10;
+
+    for(int i = 1; i < allCameras.length; i++) {
+      allCameras[i].updateRobotPose();
+
+      if(allCameras[i].getRobotPose3d().isPresent()) {
+        if(allCameras[i].getPoseAmbiguity().get() != -1 && allCameras[i].getPoseAmbiguity().get() < lowestAmbiguity) {
+          bestPose = allCameras[i].getRobotPose3d().get();
+          lowestAmbiguity = allCameras[i].getPoseAmbiguity().get();
+        }
+      }
+    }
+
+    if(bestPose == null) {
       
-    // }else{
-    //   pose3d = bestPose;
-    // }
+    }else{
+      pose3d = bestPose;
+    }
   }
 
   /**Updates the pose2d of the turret.
@@ -411,10 +407,10 @@ public class PhotonVision extends SubsystemBase {
    */
   public double getDistanceToHub(Pose2d pose) {
     // if(getTurretPose2d().isPresent() && FIELD_LAYOUT.getTagPose(allCameras[0].getTrackedHubTag().get().getFiducialId()).isPresent()) {
-    //   return Optional.of(PhotonUtils.getDistanceToPose(getTurretPose2d().get(), FIELD_LAYOUT.getTagPose(allCameras[0].getTrackedHubTag().get().getFiducialId()).get().toPose2d()));
+    //   return (PhotonUtils.getDistanceToPose(getTurretPose2d().get(), FIELD_LAYOUT.getTagPose(allCameras[0].getTrackedHubTag().get().getFiducialId()).get().toPose2d()));
     // }
     
-    // return Optional.of(0.0);
+    // return 0.0;
 
     // if(FIELD_LAYOUT.getTagPose(getClosestCenterHubTag()).isPresent()) {
     //   return PhotonUtils.getDistanceToPose(pose2d, FIELD_LAYOUT.getTagPose(getClosestCenterHubTag()).get().toPose2d());
@@ -438,11 +434,11 @@ public class PhotonVision extends SubsystemBase {
     if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
       x = (FIELD_LAYOUT.getTagPose(centerHubTagsIDs.FRONT.getCenterRedHubTagID()).get().toPose2d().getX() + FIELD_LAYOUT.getTagPose(centerHubTagsIDs.BACK.getCenterRedHubTagID()).get().toPose2d().getX()) / 2;
       y = (FIELD_LAYOUT.getTagPose(centerHubTagsIDs.FRONT.getCenterRedHubTagID()).get().toPose2d().getY() + FIELD_LAYOUT.getTagPose(centerHubTagsIDs.BACK.getCenterRedHubTagID()).get().toPose2d().getY()) / 2;
-      rotation = (FIELD_LAYOUT.getTagPose(centerHubTagsIDs.FRONT.getCenterRedHubTagID()).get().toPose2d().getRotation().getRadians() + FIELD_LAYOUT.getTagPose(centerHubTagsIDs.BACK.getCenterRedHubTagID()).get().toPose2d().getRotation().getRadians()) / 2;
+      // rotation = (FIELD_LAYOUT.getTagPose(centerHubTagsIDs.FRONT.getCenterRedHubTagID()).get().toPose2d().getRotation().getRadians() + FIELD_LAYOUT.getTagPose(centerHubTagsIDs.BACK.getCenterRedHubTagID()).get().toPose2d().getRotation().getRadians()) / 2;
     }else if(DriverStation.getAlliance().get() == DriverStation.Alliance.Blue) {
       x = (FIELD_LAYOUT.getTagPose(centerHubTagsIDs.FRONT.getCenterBlueHubTagID()).get().toPose2d().getX() + FIELD_LAYOUT.getTagPose(centerHubTagsIDs.BACK.getCenterBlueHubTagID()).get().toPose2d().getX()) / 2;
       y = (FIELD_LAYOUT.getTagPose(centerHubTagsIDs.FRONT.getCenterBlueHubTagID()).get().toPose2d().getY() + FIELD_LAYOUT.getTagPose(centerHubTagsIDs.BACK.getCenterBlueHubTagID()).get().toPose2d().getY()) / 2;
-      rotation = (FIELD_LAYOUT.getTagPose(centerHubTagsIDs.FRONT.getCenterBlueHubTagID()).get().toPose2d().getRotation().getRadians() + FIELD_LAYOUT.getTagPose(centerHubTagsIDs.BACK.getCenterBlueHubTagID()).get().toPose2d().getRotation().getRadians()) / 2;
+      // rotation = (FIELD_LAYOUT.getTagPose(centerHubTagsIDs.FRONT.getCenterBlueHubTagID()).get().toPose2d().getRotation().getRadians() + FIELD_LAYOUT.getTagPose(centerHubTagsIDs.BACK.getCenterBlueHubTagID()).get().toPose2d().getRotation().getRadians()) / 2;
     }
     
     return new Pose2d(x, y, new Rotation2d(rotation));
@@ -454,17 +450,17 @@ public class PhotonVision extends SubsystemBase {
    * If the distance to the hub is not present, this returns 0.0.
    */
   public double getYawToHub(Pose2d pose) {
-    // return getDistanceToHub() > 0.0 ? allCameras[0].getYawToHub().get() : 0.0;
+    return getDistanceToHub(pose) > 0.0 ? allCameras[0].getYawToHub().get() : 0.0;
 
-    if(getDistanceToHub(pose) > 0.0) {
-      // double x = FIELD_LAYOUT.getTagPose(getClosestCenterHubTag()).get().getX() - pose2d.getX();
-      // double y = FIELD_LAYOUT.getTagPose(getClosestCenterHubTag()).get().getY() - pose2d.getY();
-      // return (Math.atan(x/y) + 360) % 360;
+    // if(getDistanceToHub(pose) > 0.0) {
+    // //   // double x = FIELD_LAYOUT.getTagPose(getClosestCenterHubTag()).get().getX() - pose2d.getX();
+    // //   // double y = FIELD_LAYOUT.getTagPose(getClosestCenterHubTag()).get().getY() - pose2d.getY();
+    // //   // return (Math.atan(x/y) + 360) % 360;
 
-      return pose2d.getRotation().getDegrees() - getHubCenterPose2d().getRotation().getDegrees();
-    }
+    //   // return pose.getRotation().getDegrees() - getHubCenterPose2d().getRotation().getDegrees();
+    // }
 
-    return 0.0;
+    // return 0.0;
   }
 
   //Puts data for vision on Elastic
@@ -487,8 +483,8 @@ public class PhotonVision extends SubsystemBase {
     builder.addDoubleProperty("Right Robot Camera Ambiguity", () -> allCameras[1].getPoseAmbiguity().get(), null);
     builder.addDoubleProperty("Left Robot Camera Ambiguity", () -> allCameras[2].getPoseAmbiguity().get(), null);
     builder.addDoubleProperty("Back Robot Camera Ambiguity", () -> allCameras[3].getPoseAmbiguity().get(), null);
-    builder.addDoubleProperty("Distance to Hub", () -> getDistanceToHub(getRobotPose2d().get()), null);
-    builder.addDoubleProperty("Yaw to Hub", () -> getYawToHub(getRobotPose2d().get()), null);
+    builder.addDoubleProperty("Distance to Hub", () -> getDistanceToHub(getTurretPose2d().get()), null);
+    builder.addDoubleProperty("Yaw to Hub", () -> getYawToHub(getTurretPose2d().get()), null);
     builder.addDoubleProperty("Tracked Hub Tag ID", () -> allCameras[0].getTrackedHubTag().get().getFiducialId(), null);
     builder.addDoubleProperty("Turret X", () -> getTurretPose2d().get().getX(), null);
     builder.addDoubleProperty("Turret Y", () -> getTurretPose2d().get().getY(), null);
@@ -506,8 +502,8 @@ public class PhotonVision extends SubsystemBase {
     updatePose3d();
     updateTurretPose2d();
     
-    getDistanceToHub(getRobotPose2d().get());
-    getYawToHub(getRobotPose2d().get());
+    getDistanceToHub(getTurretPose2d().get());
+    getYawToHub(getTurretPose2d().get());
 
     setPose2d(getRobotPose2d().get());
 

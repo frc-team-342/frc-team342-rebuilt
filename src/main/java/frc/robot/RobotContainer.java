@@ -109,14 +109,14 @@ public class RobotContainer {
     wristUp = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_UP_POSITION), intake);
     wristMiddle = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_MIDDLE_POSITION), intake);
     getFuelUnstuck = Commands.runEnd(() -> {intake.spinIntake(0.6);}, () -> intake.stopIntake(), intake);
-    intakeFuel = Commands.runEnd(() -> {intake.spinIntake(-1);}, () -> intake.stopIntake(), intake);
+    intakeFuel = Commands.runEnd(() -> {intake.spinIntake(-1);}, () -> intake.stopIntake());
     shoot = Commands.runEnd(() -> shooter.shootWithDistance(1, photonVision.getRobotPose2d().get()), () -> shooter.stopShooterAndFeeder(), shooter);
     
     // turretShoot = Commands.runEnd(() -> shooter.shootWithoutPID(-0.17, -0.52, 1), () -> shooter.stopShooterAndFeeder(), shooter);
     turretShoot = Commands.runEnd(() -> shooter.shootWithSpeed(5.98473400509, 11.7034798322, 1), () -> shooter.stopShooterAndFeeder(), shooter);
     downtake = Commands.parallel(
       Commands.runEnd(() -> shooter.feed(-0.9), () -> shooter.feed(0), shooter),
-      Commands.runEnd(() -> spindexer.SpindexerWithSpeed(-0.1), () -> spindexer.SpindexerWithSpeed(0), spindexer)
+      Commands.runEnd(() -> spindexer.SpindexerWithSpeed(-0.5), () -> spindexer.SpindexerWithSpeed(0), spindexer)
     );
     shootWhileMoving = Commands.runEnd(() -> shooter.shootWithDistance(1, AimAhead.getNextPose()), () -> shooter.stopShooterAndFeeder(), shooter);
 
@@ -185,9 +185,9 @@ public class RobotContainer {
     fieldOrientedButton.onTrue(toggleFieldOriented); // 'A' button
     // turretToggleButton.onTrue(toggleManualTurret); // 'Start' button
     toggleDriveAssistButton.onTrue(toggleDriveAssist); // 'B' button
-    shootButton.whileTrue(turretShoot);
+    // shootButton.whileTrue(turretShoot);
     // shootButton.whileTrue(shootWhileMoving);
-    // shootButton.whileTrue(shoot);
+    shootButton.whileTrue(shoot);
     wristUpButton.onTrue(wristUp);
     wristDownButton.onTrue(wristDown);
     wristMiddleButton.onTrue(wristMiddle);
