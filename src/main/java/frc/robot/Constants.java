@@ -100,7 +100,7 @@ public final class Constants {
     public static final double[] ROTATE_PID_VALUES = {0.4, 0.0, 0.4};
 
     //Max drive and rotate speeds
-    public static final double MAX_DRIVE_SPEED = Units.feetToMeters(15);
+    public static final double MAX_DRIVE_SPEED = Units.feetToMeters(20);
     public static final double MAX_ROTATE_SPEED = 3 * Math.PI;
 
     //Min drive and rotate speeds
@@ -138,13 +138,13 @@ public final class Constants {
     public static final double WRIST_GEAR_RATIO = 25.0;
     public static final double WRIST_POSITION_CONVERSION_FACTOR = (2*Math.PI) / WRIST_GEAR_RATIO;
 
-    public static final double WRIST_ALLOWED_ERROR = 0.05;
-    public static final double WRIST_DOWN_POSITION = 5.84;
-    public static final double WRIST_UP_POSITION = 0.3;
-    public static final double WRIST_MIDDLE_POSITION = 2.535;
+    public static final double WRIST_ALLOWED_ERROR = 0.025;
+    public static final double WRIST_DOWN_POSITION = 5.861;
+    public static final double WRIST_UP_POSITION = 0.01;
+    public static final double WRIST_MIDDLE_POSITION = 2.182;
     
-    public static final double[] WRIST_PID_VALUES_SLOT0 = {0.2, 0.0, 0.02};
-    public static final double[] WRIST_PID_VALUES_SLOT1 = {0.35, 0.0, 0.2};
+    public static final double[] WRIST_PID_VALUES_SLOT0 = {0.15, 0.0, 0.03};
+    public static final double[] WRIST_PID_VALUES_SLOT1 = {0.2, 0.0, 0.25};
   }
 
   public static class ShooterConstants{
@@ -156,10 +156,10 @@ public final class Constants {
 
     public static final int SHOOTER_VELOCITY_ERROR = 50;
 
-    public static final double[] TOP_SHOOTER_PID_VALUES = {0, 0, 0}; //All values are zero because it was running perfectly with only ff
-    public static final double[] TOP_SHOOTER_SVA_VALUES = {0.13158, 0.0018075, 0.00017599};
+    public static final double[] TOP_SHOOTER_PID_VALUES = {0, 0, 0}; //Values from sysid //9.8124E-06
+    public static final double[] TOP_SHOOTER_SVA_VALUES = {0, 0.0018275, 0}; //0.15841, 0.0018275, 0.00017214
 
-    public static final double[] BOTTOM_SHOOTER_PID_VALUES = {0, 0, 0}; //All values are zero because it was running perfectly with only ff
-    public static final double[] BOTTOM_SHOOTER_SVA_VALUES = {0.13709, 0.0017715, 0.00023884};
+    public static final double[] BOTTOM_SHOOTER_PID_VALUES = {0, 0, 0}; //Values from sysid //1.346E-05
+    public static final double[] BOTTOM_SHOOTER_SVA_VALUES = {0, 0.0017631, 0}; //0.22864, 0.0017631, 0.00022123
   }
 }

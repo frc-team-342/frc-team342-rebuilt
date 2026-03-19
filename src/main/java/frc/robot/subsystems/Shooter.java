@@ -13,6 +13,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -127,9 +128,9 @@ public class Shooter extends SubsystemBase {
 
     topShooterSysIDRoutine = new SysIdRoutine(
       new Config(
-        Volts.of(1).per(Second),
-        Volts.of(2),
-        Seconds.of(20)
+        Volts.of(2).per(Second),
+        Volts.of(8),
+        Seconds.of(30)
       ),
       new Mechanism(
         (volts) -> topShooterMotor.setVoltage(volts.in(Volts)), null, this)
@@ -137,9 +138,9 @@ public class Shooter extends SubsystemBase {
 
     bottomShooterSysIDRoutine = new SysIdRoutine(
       new Config(
-        Volts.of(1).per(Second),
-        Volts.of(2),
-        Seconds.of(20)
+        Volts.of(2).per(Second),
+        Volts.of(8),
+        Seconds.of(30)
       ),
       new Mechanism(
         (volts) -> bottomShooterMotor.setVoltage(volts.in(Volts)), null, this)
@@ -236,16 +237,19 @@ public class Shooter extends SubsystemBase {
     return Commands.sequence(
       topShooterSysIDRoutine
         .quasistatic(Direction.kForward)
-        .withTimeout(3),
+        .withTimeout(5),
+      new WaitCommand(3),
       topShooterSysIDRoutine
         .quasistatic(Direction.kReverse)
-        .withTimeout(3),
+        .withTimeout(5),
+      new WaitCommand(3),
       topShooterSysIDRoutine
         .dynamic(Direction.kForward)
-        .withTimeout(3),
+        .withTimeout(5),
+      new WaitCommand(3),
       topShooterSysIDRoutine
         .dynamic(Direction.kReverse)
-        .withTimeout(3)
+        .withTimeout(5)
     );
   }
 
@@ -257,16 +261,19 @@ public class Shooter extends SubsystemBase {
     return Commands.sequence(
       bottomShooterSysIDRoutine
         .quasistatic(Direction.kForward)
-        .withTimeout(3),
+        .withTimeout(5),
+      new WaitCommand(3),
       bottomShooterSysIDRoutine
         .quasistatic(Direction.kReverse)
-        .withTimeout(3),
+        .withTimeout(5),
+      new WaitCommand(3),
       bottomShooterSysIDRoutine
         .dynamic(Direction.kForward)
-        .withTimeout(3),
+        .withTimeout(5),
+      new WaitCommand(3),
       bottomShooterSysIDRoutine
         .dynamic(Direction.kReverse)
-        .withTimeout(3)
+        .withTimeout(5)
     );
   }
 

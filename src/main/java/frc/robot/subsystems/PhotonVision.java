@@ -281,70 +281,66 @@ public class PhotonVision extends SubsystemBase {
     return Optional.of(pitch /= numCamsUsed);
   }
 
-  /**Calculates the average pose from all poses given by the cameras.
-   * The calculated pose is used to update the robot pose3d.
+  /**Updates the robot pose3d using the best pose from the cameras.
+   * Best pose is determined by ambiguity.
    */
   public void updatePose3d() {
-    int numPosesUsed = 0;
-    double robotX = 0;
-    double robotY = 0;
-    double robotZ = 0;
-    double robotRoll = 0;
-    double robotPitch = 0;
-    double robotYaw = 0;
-
-    for(int i = 1; i < allCameras.length; i++) {
-      allCameras[i].updateRobotPose();
-    }
-
-    for(int i = 1; i < allCameras.length; i++) {
-      if(allCameras[i].getRobotPose3d().isPresent()) {
-        robotX += allCameras[i].getRobotX().get();
-        robotY += allCameras[i].getRobotY().get();
-        robotZ += allCameras[i].getRobotZ().get();
-        robotRoll += allCameras[i].getRobotRoll().get();
-        robotPitch += allCameras[i].getRobotPitch().get();
-        robotYaw += allCameras[i].getRobotPitch().get();
-
-        numPosesUsed++;
-      }
-    }
-
-    robotX = robotX / numPosesUsed;
-    robotY = robotY / numPosesUsed;
-    robotZ = robotZ / numPosesUsed;
-    robotRoll = robotRoll / numPosesUsed;
-    robotPitch = robotPitch / numPosesUsed;
-    robotYaw = robotYaw / numPosesUsed;
-
-    pose3d = new Pose3d(
-      new Translation3d(robotX, robotY, robotZ),
-      new Rotation3d(robotRoll, robotPitch, robotYaw)
-    );
-
-    /**Updates the robot pose3d using the best pose from the cameras.
-     * Best pose is determined by ambiguity.
-     */
-
-    // Pose3d bestPose = null;
-    // double lowestAmbiguity = 10;
+    // int numPosesUsed = 0;
+    // double robotX = 0;
+    // double robotY = 0;
+    // double robotZ = 0;
+    // double robotRoll = 0;
+    // double robotPitch = 0;
+    // double robotYaw = 0;
 
     // for(int i = 1; i < allCameras.length; i++) {
     //   allCameras[i].updateRobotPose();
+    // }
 
+    // for(int i = 1; i < allCameras.length; i++) {
     //   if(allCameras[i].getRobotPose3d().isPresent()) {
-    //     if(allCameras[i].getPoseAmbiguity().get() != -1 && allCameras[i].getPoseAmbiguity().get() < lowestAmbiguity) {
-    //       bestPose = allCameras[i].getRobotPose3d().get();
-    //       lowestAmbiguity = allCameras[i].getPoseAmbiguity().get();
-    //     }
+    //     robotX += allCameras[i].getRobotX().get();
+    //     robotY += allCameras[i].getRobotY().get();
+    //     robotZ += allCameras[i].getRobotZ().get();
+    //     robotRoll += allCameras[i].getRobotRoll().get();
+    //     robotPitch += allCameras[i].getRobotPitch().get();
+    //     robotYaw += allCameras[i].getRobotPitch().get();
+
+    //     numPosesUsed++;
     //   }
     // }
 
-    // if(bestPose == null) {
+    // robotX = robotX / numPosesUsed;
+    // robotY = robotY / numPosesUsed;
+    // robotZ = robotZ / numPosesUsed;
+    // robotRoll = robotRoll / numPosesUsed;
+    // robotPitch = robotPitch / numPosesUsed;
+    // robotYaw = robotYaw / numPosesUsed;
+
+    // pose3d = new Pose3d(
+    //   new Translation3d(robotX, robotY, robotZ),
+    //   new Rotation3d(robotRoll, robotPitch, robotYaw)
+    // );
+
+    Pose3d bestPose = null;
+    double lowestAmbiguity = 10;
+
+    for(int i = 1; i < allCameras.length; i++) {
+      allCameras[i].updateRobotPose();
+
+      if(allCameras[i].getRobotPose3d().isPresent()) {
+        if(allCameras[i].getPoseAmbiguity().get() != -1 && allCameras[i].getPoseAmbiguity().get() < lowestAmbiguity) {
+          bestPose = allCameras[i].getRobotPose3d().get();
+          lowestAmbiguity = allCameras[i].getPoseAmbiguity().get();
+        }
+      }
+    }
+
+    if(bestPose == null) {
       
-    // }else{
-    //   pose3d = bestPose;
-    // }
+    }else{
+      pose3d = bestPose;
+    }
   }
 
   /**Updates the pose2d of the turret.
