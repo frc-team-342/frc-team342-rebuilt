@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.SwerveModule;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.TurretConstants;
 import frc.robot.commands.DriveWithJoystick;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.Odometry;
@@ -433,6 +434,30 @@ public class SwerveDrive extends SubsystemBase {
       backLeftModule.syncEncoders();
     }
 
+      /**
+   * @return Y coordinate of the turret on the field
+   */
+  public double getTurretY(){
+    double h = photonVision.tagIsPresentAcrossAllCameras() ? photonVision.getRobotY().get() : odometry.getPoseMeters().getY(); //robot y coordinate
+    double k = photonVision.tagIsPresentAcrossAllCameras() ? photonVision.getRobotX().get() : odometry.getPoseMeters().getX(); //robot x coordinate
+    double robotAngle = ((getGyro().getYaw() % 360.0) + 360) % 360; //Robot rotation
+    double y = h + TurretConstants.TURRET_OFFSET_Y;
+    double x = k + TurretConstants.TURRET_OFFSET_X;
+    return h +((y-h)*Math.cos(robotAngle)) - ((x-k) * Math.sin(robotAngle));
+  }
+
+  /**
+   * @return X coordinate of the turret on the field
+   */
+  public double getTurretX(){
+    double h = photonVision.tagIsPresentAcrossAllCameras() ? photonVision.getRobotY().get() : odometry.getPoseMeters().getY(); //robot y coordinate
+    double k = photonVision.tagIsPresentAcrossAllCameras() ? photonVision.getRobotX().get() : odometry.getPoseMeters().getX(); //robot x coordinate
+    double robotAngle = ((getGyro().getYaw() % 360.0) + 360) % 360; //Robot rotation in degrees
+    double y = h + TurretConstants.TURRET_OFFSET_Y; //Original y coordinate of turret relative to robot center y coordinate
+    double x = k + TurretConstants.TURRET_OFFSET_X; //Original x coordinate of turret relative to robot center x coordinate
+    return k +((y-h)*Math.sin(robotAngle)) + ((x-k) * Math.cos(robotAngle));
+  }
+
     /**Configures the auto builder for PathPlanner.
      * 
      */
@@ -557,12 +582,16 @@ public class SwerveDrive extends SubsystemBase {
 
     //Updates the odometry every run
 
-    // if(photonVision.tagIsPresentAcrossAllCameras()) {
-    //   updateOdometryWithVision();
-    // }else{
-      updateOdometry();
-    // }
+    if(DriverStation.isTeleop()) {
+      if(photonVision.tagIsPresentAcrossAllCameras()) {
+        updateOdometryWithVision();
+      }else{
+        updateOdometry();
+      }
+    }
 
     field.setRobotPose(odometry.getPoseMeters());
+
+    photonVision.setTurretPose2d(getTurretX(), getTurretY(), -(getGyro().getAngle() % 360) - 180);
   }
 }

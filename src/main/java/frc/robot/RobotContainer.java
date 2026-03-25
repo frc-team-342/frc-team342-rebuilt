@@ -6,6 +6,7 @@ package frc.robot;
 
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.commands.AimAhead;
 import frc.robot.commands.Autos;
 import frc.robot.commands.DriveWithJoystick;
 import frc.robot.commands.ExampleCommand;
@@ -14,7 +15,7 @@ import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.PhotonVision;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.SwerveDrive;
-// import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
 import frc.robot.Constants.IntakeConstants.*;
@@ -28,6 +29,7 @@ import frc.robot.CustomXboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
@@ -43,7 +45,7 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final SwerveDrive swere;
-  // private final Turret turret;
+  private final Turret turret;
   private final PhotonVision photonVision;
   private final Intake intake;
   private final Spindexer spindexer;
@@ -54,11 +56,16 @@ public class RobotContainer {
 
   private final JoystickButton fieldOrientedButton;
   private final JoystickButton turretToggleButton;
+  private final JoystickButton toggleWristButton;
+  private final JoystickButton turretFastModeToggleButton;
   private final JoystickButton shootButton;
-  private final JoystickButton reverseIntakeButton;
+  // private final JoystickButton reverseIntakeButton;
   private final JoystickButton toggleDriveAssistButton;
   private final JoystickButton downtakeButton;
-  private final JoystickButton intakeButton;
+  // private final JoystickButton intakeButton;
+  private final JoystickButton straightAheadTurretButton;
+  private final JoystickButton leftSideTurretTurnButton;
+  private final JoystickButton rightSideTurretTurnButton;
   private final POVButton wristDownButton;
   private final POVButton wristUpButton;
   private final POVButton wristMiddleButton;
@@ -68,7 +75,8 @@ public class RobotContainer {
 
   private final Command toggleFieldOriented;
   // private final Command turretToAngle;
-  // private final Command toggleManualTurret;
+  private final Command toggleManualTurret;
+  private final Command toggleFastTurret;
   private final Command toggleDriveAssist;
   private final Command wristDown;
   private final Command wristUp;
@@ -78,6 +86,8 @@ public class RobotContainer {
   private final Command shoot;
   private final Command turretShoot;
   private final Command downtake;
+  private final Command shootWhileMoving;
+  private final Command toggleWristManual;
 
   private final SendableChooser<Command> autoChooser;
 
@@ -89,7 +99,7 @@ public class RobotContainer {
   public RobotContainer() {
     photonVision = new PhotonVision();
     swere = new SwerveDrive(photonVision);
-    // turret = new Turret(swere);
+    turret = new Turret(swere, photonVision);
     intake = new Intake();
     spindexer = new Spindexer();
     shooter = new Shooter(spindexer, photonVision);
@@ -98,44 +108,56 @@ public class RobotContainer {
     operator = new CustomXboxController(1);
 
     toggleFieldOriented = Commands.runOnce(() -> {swere.toggleFieldOriented();}, swere);
-    // toggleManualTurret = Commands.runOnce(() -> {turret.toggleManual();}, turret);
+    toggleManualTurret = Commands.runOnce(() -> {turret.toggleManual();});
     toggleDriveAssist = Commands.runOnce(() -> {swere.toggleDriveAssist();}, swere);
-    // turretToAngle = Commands.run(() -> {turret.turretToAngle(photonVision.getYawToHub().get(), operator);});
-    wristDown = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_DOWN_POSITION), intake);
-    wristUp = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_UP_POSITION), intake);
-    wristMiddle = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_MIDDLE_POSITION), intake);
+    toggleWristManual = Commands.runOnce(() -> intake.toggleManual());
+    toggleFastTurret = Commands.runOnce(() -> turret.toggleFastTurret());
+    // turretToAngle = new AimAhead(swere, shooter, null, photonVision, driver);
+    // turretToAngle = Commands.run(() -> {turret.turretToAngle(turret.getAngleToPose(photonVision.getHubCenterPose2d()), operator);}, turret);
+    wristDown = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_DOWN_POSITION, operator), intake);
+    wristUp = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_UP_POSITION, operator), intake);
+    wristMiddle = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_MIDDLE_POSITION, operator), intake);
     getFuelUnstuck = Commands.runEnd(() -> {intake.spinIntake(0.6);}, () -> intake.stopIntake(), intake);
     intakeFuel = Commands.runEnd(() -> {intake.spinIntake(-1);}, () -> intake.stopIntake());
-    shoot = Commands.runEnd(() -> shooter.shootWithDistance(1), () -> shooter.stopShooterAndFeeder(), shooter);
+    shoot = Commands.runEnd(() -> shooter.shootWithDistance(1, photonVision.getRobotPose2d().get()), () -> shooter.stopShooterAndFeeder(), shooter);
     
     // turretShoot = Commands.runEnd(() -> shooter.shootWithoutPID(-0.17, -0.52, 1), () -> shooter.stopShooterAndFeeder(), shooter);
-    turretShoot = Commands.runEnd(() -> shooter.shootWithSpeed(-1500, -2200, 1), () -> shooter.stopShooterAndFeeder(), shooter);
+    turretShoot = Commands.runEnd(() -> shooter.shootWithSpeed(9.2, 9.4, 1), () -> shooter.stopShooterAndFeeder(), shooter);
     downtake = Commands.parallel(
       Commands.runEnd(() -> shooter.feed(-0.9), () -> shooter.feed(0), shooter),
       Commands.runEnd(() -> spindexer.SpindexerWithSpeed(-0.5), () -> spindexer.SpindexerWithSpeed(0), spindexer)
     );
-
+    shootWhileMoving = Commands.runEnd(() -> shooter.shootWithDistance(1, AimAhead.getNextPose()), () -> shooter.stopShooterAndFeeder(), shooter);
 
     driveWithJoystick = new DriveWithJoystick(swere, driver, photonVision);
     moveWristWithJoystick = new MoveWristWithJoystick(intake, operator);
     fieldOrientedButton = new JoystickButton(driver, XboxController.Button.kA.value);
-    turretToggleButton = new JoystickButton(operator, XboxController.Button.kStart.value);
+    turretToggleButton = new JoystickButton(operator, XboxController.Button.kRightStick.value);
+    turretFastModeToggleButton = new JoystickButton(operator, XboxController.Button.kA.value);
     toggleDriveAssistButton = new JoystickButton(driver, XboxController.Button.kB.value);
     shootButton = new JoystickButton(operator, XboxController.Button.kRightBumper.value);
-    reverseIntakeButton = new JoystickButton(operator, XboxController.Button.kX.value);
-    intakeButton = new JoystickButton(operator, XboxController.Button.kA.value);
+    leftSideTurretTurnButton = new JoystickButton(operator, XboxController.Button.kX.value);
+    rightSideTurretTurnButton = new JoystickButton(operator, XboxController.Button.kB.value);
+    straightAheadTurretButton = new JoystickButton(operator, XboxController.Button.kY.value);
+    // reverseIntakeButton = new JoystickButton(operator, XboxController.Button.kX.value);
+    // intakeButton = new JoystickButton(operator, XboxController.Button.kA.value);
     downtakeButton = new JoystickButton(operator, XboxController.Button.kLeftBumper.value);
+    toggleWristButton = new JoystickButton(operator, XboxController.Button.kLeftStick.value);
     wristDownButton = new POVButton(operator, 180);
     wristUpButton = new POVButton(operator, 0);
     wristMiddleButton = new POVButton(operator, 90);
 
     autoChooser = new SendableChooser<>();
 
-    NamedCommands.registerCommand("Shoot Command", Commands.run(() -> shooter.shootWithSpeed(-1500, -2200, 1), shooter));
+    // NamedCommands.registerCommand("Shoot Command", Commands.run(() -> shooter.shootWithSpeed(5.98473400509, 11.7034798322, 1), shooter));
+    NamedCommands.registerCommand("Shoot Command", Commands.runEnd(() -> shooter.shootWithDistance(1, photonVision.getHubCenterPose2d()), () -> shooter.stopShooterAndFeeder(), shooter).withTimeout(5));
     NamedCommands.registerCommand("Wrist Down", wristDown);
     NamedCommands.registerCommand("Wrist Up", wristUp);
-    NamedCommands.registerCommand("Wrist Middle", Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_MIDDLE_POSITION), intake).withTimeout(0.5));
+    NamedCommands.registerCommand("Wrist Middle", Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_MIDDLE_POSITION, operator), intake).withTimeout(0.5));
     NamedCommands.registerCommand("Intake", intakeFuel);
+    NamedCommands.registerCommand("Right Auto Turret Turn", Commands.run(() -> turret.turnTurret(120.11383056640625, operator), turret).withTimeout(0.75));
+    NamedCommands.registerCommand("Outpost Turret Turn", Commands.run(() -> turret.turnTurret(63, operator), turret).withTimeout(0.75));
+    NamedCommands.registerCommand("Right Outpost Start Turret Turn", Commands.run(() -> turret.turnTurret(109.23597635949386, operator), turret).withTimeout(0.75));
 
     autoChooser.addOption("Top Shooter Sys ID", Autos.topShooterSysID(shooter));
     autoChooser.addOption("Bottom Shooter Sys ID", Autos.bottomShooterSysID(shooter));
@@ -144,13 +166,15 @@ public class RobotContainer {
     autoChooser.addOption("Basic Left Auto", Autos.basicLeftAuto(swere, shooter));
     autoChooser.addOption("Basic Right Auto", Autos.basicRightAuto(swere, shooter));
     autoChooser.addOption("Right Outpost Shoot", Autos.rightOutpostShoot(swere, shooter));
+    autoChooser.addOption("Basic Right Turret Auto", Autos.basicRightTurretAuto(swere, shooter, turret, photonVision, operator));
     swere.setDefaultCommand(driveWithJoystick);
+    turret.setDefaultCommand(Commands.run(() -> turret.manualTurret(operator), turret));
     // turret.setDefaultCommand(turretToAngle);
     intake.setDefaultCommand(moveWristWithJoystick);
     spindexer.setDefaultCommand(spindexer.runSpindexer());
 
     SmartDashboard.putData(swere);
-    // SmartDashboard.putData(turret);
+    SmartDashboard.putData(turret);
     SmartDashboard.putData(photonVision);
     SmartDashboard.putData(spindexer);
     SmartDashboard.putData(shooter);
@@ -179,17 +203,25 @@ public class RobotContainer {
     // cancelling on release.
     m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
     fieldOrientedButton.onTrue(toggleFieldOriented); // 'A' button
-    // turretToggleButton.onTrue(toggleManualTurret); // 'Start' button
+    turretToggleButton.onTrue(toggleManualTurret); // 'Start' button
     toggleDriveAssistButton.onTrue(toggleDriveAssist); // 'B' button
-    shootButton.whileTrue(turretShoot);
-    // shootButton.whileTrue(shoot);
+    toggleWristButton.onTrue(toggleWristManual); // 'Left Joystick' button
+    turretFastModeToggleButton.onTrue(toggleFastTurret);
+    // shootButton.whileTrue(turretShoot);
+    shootButton.whileTrue(shoot);
+    // shootButton.whileTrue(shootWhileMoving);
+    leftSideTurretTurnButton.onTrue(Commands.run(() -> turret.turnTurret(-90, operator), turret));
+    rightSideTurretTurnButton.onTrue(Commands.run(() -> turret.turnTurret(90, operator), turret));
+    straightAheadTurretButton.onTrue(Commands.run(() -> turret.turnTurret(0, operator), turret));
     wristUpButton.onTrue(wristUp);
     wristDownButton.onTrue(wristDown);
     wristMiddleButton.onTrue(wristMiddle);
     // wristUpButton.whileTrue(intakeFuel);
-    reverseIntakeButton.whileTrue(getFuelUnstuck);
+    // reverseIntakeButton.whileTrue(getFuelUnstuck);
     downtakeButton.whileTrue(downtake);
-    intakeButton.whileTrue(intakeFuel);
+    // intakeButton.whileTrue(intakeFuel);
+    operator.rightTriggerPressed().whileTrue(intakeFuel);
+    operator.leftTriggerPressed().whileTrue(getFuelUnstuck);
   }
 
   /**

@@ -15,6 +15,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.PhotonVision;
+import frc.robot.CustomXboxController;
 import frc.robot.Constants.IntakeConstants;
 
 public final class Autos {
@@ -67,6 +70,15 @@ public final class Autos {
 
   public static Command rightOutpostShoot(SwerveDrive swerve, Shooter shooter){
     return new PathPlannerAuto("Right Outpost Shoot");
+  }
+
+  public static Command basicRightTurretAuto(SwerveDrive swerve, Shooter shooter, Turret turret, PhotonVision vision, CustomXboxController controller) {
+    return Commands.sequence(
+      Commands.runOnce(() -> swerve.setPose(new Pose2d(3.537, 1.791, new Rotation2d(0)))),
+      Commands.run(() -> turret.turnTurret(120.11383056640625, controller), turret).withTimeout(0.75),
+      Commands.runEnd(() -> shooter.shootWithDistance(1, vision.getHubCenterPose2d()), () -> shooter.stopShooterAndFeeder(), shooter).withTimeout(5),
+      Commands.run(() -> turret.turnTurret(0, controller), turret)
+    );
   }
 
   private Autos() {

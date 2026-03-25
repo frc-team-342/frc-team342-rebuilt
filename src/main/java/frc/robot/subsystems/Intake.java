@@ -20,6 +20,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.XboxController;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -43,6 +45,8 @@ public class Intake extends SubsystemBase {
 
   private SparkFlexConfig intakeConfig;
   private SparkFlexConfig wristConfig;
+
+  private boolean isManual;
   /** Creates a new Intake. */
   public Intake() {
     intakeMotor = new SparkFlex(INTAKE_ID, MotorType.kBrushless);
@@ -50,6 +54,8 @@ public class Intake extends SubsystemBase {
 
     intakeEncoder = intakeMotor.getEncoder();
     wristEncoder = wristMotor.getEncoder();
+
+    isManual = false;
     // throughBore = new DutyCycleEncoder(WRIST_ENCODER_ID);
 
     wristPID = wristMotor.getClosedLoopController();
@@ -88,6 +94,10 @@ public class Intake extends SubsystemBase {
     intakeMotor.set(speed);
   }
 
+  public void toggleManual(){
+    isManual = !isManual;
+  }
+
   /**Moves the wrist motor at the given speed.
    * 
    * @param speed The speed to set. Value should be between -1.0 and 1.0.
@@ -100,15 +110,24 @@ public class Intake extends SubsystemBase {
    * 
    * @param setpoint The position to move to.
    */
-  public void wristToPosition(double setpoint) {
-    if(setpoint > getWristPosition()) {
-      wristPID.setSetpoint(setpoint, ControlType.kPosition, ClosedLoopSlot.kSlot0);
-    }else if(setpoint < getWristPosition()) {
-      wristPID.setSetpoint(setpoint, ControlType.kPosition, ClosedLoopSlot.kSlot1);
-      if(wristPID.isAtSetpoint()) {
-        resetWristEncoder();
+  public void wristToPosition(double setpoint, XboxController controller) {
+    if(!isManual){
+      if(setpoint > getWristPosition()) {
+        wristPID.setSetpoint(setpoint, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+      }else if(setpoint < getWristPosition()) {
+        wristPID.setSetpoint(setpoint, ControlType.kPosition, ClosedLoopSlot.kSlot1);
+        if(wristPID.isAtSetpoint()) {
+          resetWristEncoder();
+        }
       }
     }
+    else{
+      wristWithJoystick(controller);
+    }
+  }
+
+  public void wristWithJoystick(XboxController controller){
+    moveWrist(controller.getLeftY()/5);
   }
 
   /**Moves the wrist to the given position and sets the intake to the given speed.
@@ -116,8 +135,8 @@ public class Intake extends SubsystemBase {
    * @param setpoint The position to move the wrist to.
    * @param speed The speed to set the intake to.
    */
-  public void wristAndIntake(double setpoint, double speed) {
-    wristToPosition(setpoint);
+  public void wristAndIntake(double setpoint, double speed, XboxController controller) {
+    wristToPosition(setpoint, controller);
     spinIntake(speed);
   }
 
@@ -182,6 +201,10 @@ public class Intake extends SubsystemBase {
     return wristEncoder;
   }
 
+  public boolean isManual() {
+    return isManual;
+  }
+
   /**Checks to see if the wrist is at the desired position.
    * 
    * @param position The desired position.
@@ -212,6 +235,7 @@ public class Intake extends SubsystemBase {
     builder.addDoubleProperty("Wrist Velocity", () -> getWristVelocity(), null);
     builder.addDoubleProperty("Wrist Voltage", () -> getWristVoltage(), null);
     builder.addDoubleProperty("Wrist Goal", () -> wristPID.getSetpoint(), null);
+    builder.addBooleanProperty("Wrist Manual", () -> isManual(), null);
   }
 
   @Override

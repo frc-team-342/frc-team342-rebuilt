@@ -51,7 +51,7 @@ public final class Constants {
     public static final Rotation3d TURRET_CAMERA_ROTATION_3D = new Rotation3d(0, 0, 0); //zero, because it's not used for pose estimation (and it's changing constantly if turret is moving)
     public static final Rotation3d ROBOT_RIGHT_CAMERA_ROTATION_3D = new Rotation3d(Math.PI/2, -1.023, -0.785);
     public static final Rotation3d ROBOT_LEFT_CAMERA_ROTATION_3D = new Rotation3d(Math.PI/2, -1.023, -0.785);
-    public static final Rotation3d ROBOT_BACK_CAMERA_ROTATION_3D = new Rotation3d(0, -1.047, Math.PI);
+    public static final Rotation3d ROBOT_BACK_CAMERA_ROTATION_3D = new Rotation3d(0, -0.261799, Math.PI);
 
     public static final Transform3d TURRET_CAMERA_TRANSFORM_3D = new Transform3d(TURRET_CAMERA_TRANSLATION_3D, TURRET_CAMERA_ROTATION_3D);
     public static final Transform3d ROBOT_RIGHT_CAMERA_TRANSFORM_3D = new Transform3d(ROBOT_RIGHT_CAMERA_TRANSLATION_3D, ROBOT_RIGHT_CAMERA_ROTATION_3D);
@@ -104,12 +104,12 @@ public final class Constants {
     public static final double MAX_ROTATE_SPEED = 3 * Math.PI;
 
     //Min drive and rotate speeds
-    public static final double MIN_DRIVE_SPEED = Units.feetToMeters(3);
+    public static final double MIN_DRIVE_SPEED = Units.feetToMeters(6);
     public static final double MIN_ROTATE_SPPEED = Math.PI;
 
     public static final PPHolonomicDriveController PATH_CONFIG_CONTROLLER = new PPHolonomicDriveController(
       new PIDConstants(1, 0, 0.7),
-      new PIDConstants(1.2, 0, 0.55)
+      new PIDConstants(1, 0, 1)
     );
 
     //NavX angle adjustment (degrees)
@@ -118,16 +118,20 @@ public final class Constants {
 
   public static class TurretConstants{
     public static final int TURRET_ID = 17;
-    public static final double[] TURRET_PID_VALUES = {0.01, 0, 0};
+    public static final double[] TURRET_PID_VALUES_SLOT0 = {0.005, 0, 0};
+    public static final double[] TURRET_PID_VALUES_SLOT1 = {0.04, 0, 0.015};
 
-    public static final double TURRET_MIN_ANGLE = 0; //The minimum angle the turret can safely be at; change later
-    public static final double TURRET_MAX_ANGLE = 0; //The maximum angle the turret can safely be at; change later
+    public static final double TURRET_MIN_ANGLE = -90;
+    public static final double TURRET_MAX_ANGLE = 160.0;
+    public static final double TURRET_ALLOWED_ERROR = 0.5;
 
     public static final double TURRET_GEAR_RATIO = 12.5;
-    public static final double TURRET_POSITION_CONVERSION = 360.0/TURRET_GEAR_RATIO;
+    public static final double TURRET_POSITION_CONVERSION = (2*Math.PI/TURRET_GEAR_RATIO) * 180/Math.PI;
 
-    public static final double TURRET_OFFSET_X = Units.inchesToMeters(-8.0); //According to Dylan; double check later
-    public static final double TURRET_OFFSET_Y = Units.inchesToMeters(-9.0); //Accodring to Dylan; double check later
+    public static final double TURRET_OFFSET_X = -0.131;
+    public static final double TURRET_OFFSET_Y = 0.151;
+
+    public static final double THROUGHBORE_ZERO = 0.2887135572178389;
   }
 
   public static class IntakeConstants{
@@ -154,12 +158,18 @@ public final class Constants {
     public static final int BOTTOM_FEEDER_MOTOR_ID = 16;
     public static final int TOP_FEEDER_MOTOR_ID = 20;
 
-    public static final int SHOOTER_VELOCITY_ERROR = 50;
+    public static final double SHOOTER_VELOCITY_ERROR = 0.1;
 
-    public static final double[] TOP_SHOOTER_PID_VALUES = {0, 0, 0}; //Values from sysid //9.8124E-06
-    public static final double[] TOP_SHOOTER_SVA_VALUES = {0, 0.0018275, 0}; //0.15841, 0.0018275, 0.00017214
+    public static final double[] TOP_SHOOTER_PID_VALUES = {0, 0, 0};
+    public static final double[] TOP_SHOOTER_SVA_VALUES = {0, 0.476584, 0};
 
-    public static final double[] BOTTOM_SHOOTER_PID_VALUES = {0, 0, 0}; //Values from sysid //1.346E-05
-    public static final double[] BOTTOM_SHOOTER_SVA_VALUES = {0, 0.0017631, 0}; //0.22864, 0.0017631, 0.00022123
+    public static final double[] BOTTOM_SHOOTER_PID_VALUES = {0, 0, 0};
+    public static final double[] BOTTOM_SHOOTER_SVA_VALUES = {0, 0.349366, 0};
+
+    public static final double BOTTOM_SHOOTER_WHEEL_DIAMETERS = 4.0;
+    public static final double TOP_SHOOTER_WHEEL_DIAMETERS = 3.0;
+
+    public static final double BOTTOM_SHOOTER_VELOCITY_CONVERSION_FACTOR = ((BOTTOM_SHOOTER_WHEEL_DIAMETERS * 0.0254) * Math.PI) / 60;
+    public static final double TOP_SHOOTER_VELOCITY_CONVERSION_FACTOR = ((TOP_SHOOTER_WHEEL_DIAMETERS * 0.0254) * Math.PI) / 60;
   }
 }
