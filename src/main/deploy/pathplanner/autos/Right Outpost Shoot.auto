@@ -5,39 +5,9 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "Right Outpost Start Turret Turn"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot Command"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "Right to Outpost"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Wrist Middle"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Outpost Turret Turn"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot Command"
           }
         }
       ]

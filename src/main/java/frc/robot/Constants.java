@@ -109,7 +109,7 @@ public final class Constants {
 
     public static final PPHolonomicDriveController PATH_CONFIG_CONTROLLER = new PPHolonomicDriveController(
       new PIDConstants(1, 0, 0.7),
-      new PIDConstants(1, 0, 1)
+      new PIDConstants(1.2, 0, 0.55)
     );
 
     //NavX angle adjustment (degrees)

@@ -69,7 +69,10 @@ public final class Autos {
   }
 
   public static Command rightOutpostShoot(SwerveDrive swerve, Shooter shooter){
-    return new PathPlannerAuto("Right Outpost Shoot");
+    return Commands.sequence(
+      Commands.runOnce(() -> swerve.setPose(new Pose2d(3.537, 0.666, new Rotation2d(0)))),
+      new PathPlannerAuto("Right Outpost Shoot")
+    );
   }
 
   public static Command basicRightTurretAuto(SwerveDrive swerve, Shooter shooter, Turret turret, PhotonVision vision, CustomXboxController controller) {

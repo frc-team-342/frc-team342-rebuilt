@@ -593,5 +593,6 @@ public class SwerveDrive extends SubsystemBase {
     field.setRobotPose(odometry.getPoseMeters());
 
     photonVision.setTurretPose2d(getTurretX(), getTurretY(), -(getGyro().getAngle() % 360) - 180);
+    // photonVision.setPose2d(odometry.getPoseMeters());
   }
 }

@@ -20,6 +20,7 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
@@ -75,6 +76,27 @@ public class Turret extends SubsystemBase {
     manual = false;
 		fastTurret = false;
   }
+
+  // public void trackPose(Pose2d pose, CustomXboxController controller) {
+  //   double yDistance = pose.getY() - vision.getTurretPose2d().get().getY();
+  //   double xDistance = pose.getX() - vision.getTurretPose2d().get().getX();
+
+  //   Rotation2d fieldRelativeAngle = Rotation2d.fromRadians(Math.atan2(yDistance, xDistance));
+  //   Rotation2d robotRelativeAngle = fieldRelativeAngle.minus(vision.getRobotPose2d().get().getRotation());
+
+  //   if(!manual){
+	// 		double safeGoal = MathUtil.clamp(robotRelativeAngle.getDegrees(), TURRET_MIN_ANGLE, TURRET_MAX_ANGLE);
+	// 		if(turretEncoder.getPosition() < -40) {
+	// 			turretController.setSetpoint(safeGoal, ControlType.kPosition, ClosedLoopSlot.kSlot1);
+	// 		}else if(turretEncoder.getPosition() > safeGoal) {
+  //   		turretController.setSetpoint(safeGoal, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+	// 		}else{
+	// 			turretController.setSetpoint(safeGoal, ControlType.kPosition, ClosedLoopSlot.kSlot1);
+	// 		}
+  //   }else{
+  //     manualTurret(controller);
+  //   }
+  // }
 
   /**Rotates a the turret to an angle when not on manual control; otherwise, it is controlled with a Joystick */
   public void turretToAngle(double angleToHub, CustomXboxController controller){
@@ -214,5 +236,6 @@ public class Turret extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    // vision.setTurretPose2d(getTurretX(), getTurretY(), turretEncoder.getPosition());
   }
 }
