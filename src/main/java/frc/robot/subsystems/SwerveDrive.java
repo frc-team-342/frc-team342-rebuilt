@@ -95,417 +95,361 @@ public class SwerveDrive extends SubsystemBase {
     SwerveModulePosition[] swerveModulePositions;
   
     /** Creates a new SwerveDrive. */
-    public SwerveDrive(PhotonVision photonVision) {
-      this.photonVision = photonVision;
+  public SwerveDrive(PhotonVision photonVision) {
+    this.photonVision = photonVision;
 
-        chassisSpeeds = new ChassisSpeeds(0,0,0);
+    chassisSpeeds = new ChassisSpeeds(0,0,0);
 
-        redSide = isRed();
+    redSide = isRed();
 
-        frontLeftModule = new SwerveModule(
-          DriveConstants.FRONT_LEFT_DRIVE_ID, 
-          DriveConstants.FRONT_LEFT_ROTATE_ID, 
-          DriveConstants.FRONT_LEFT_CANCODER_ID, 
-
-          false, true, 
-          "FL",
-          DriveConstants.FL_DIAMETER
-          );
+    frontLeftModule = new SwerveModule(
+      DriveConstants.FRONT_LEFT_DRIVE_ID, 
+      DriveConstants.FRONT_LEFT_ROTATE_ID, 
+      DriveConstants.FRONT_LEFT_CANCODER_ID, 
+      false, 
+      true, 
+      "FL",
+      DriveConstants.FL_DIAMETER
+    );
   
-          frontRightModule = new SwerveModule(
-          DriveConstants.FRONT_RIGHT_DRIVE_ID, 
-          DriveConstants.FRONT_RIGHT_ROTATE_ID, 
-          DriveConstants.FRONT_LEFT_CANCODER_ID, 
-
-          false, true, 
-          "FR",
-          DriveConstants.FR_DIAMETER
-
-          );
+    frontRightModule = new SwerveModule(
+      DriveConstants.FRONT_RIGHT_DRIVE_ID, 
+      DriveConstants.FRONT_RIGHT_ROTATE_ID, 
+      DriveConstants.FRONT_LEFT_CANCODER_ID, 
+      false, 
+      true, 
+      "FR",
+      DriveConstants.FR_DIAMETER
+    );
   
-          backLeftModule = new SwerveModule(
-          DriveConstants.BACK_LEFT_DRIVE_ID, 
-          DriveConstants.BACK_LEFT_ROTATE_ID, 
-          DriveConstants.BACK_LEFT_CANCODER_ID, 
-
-          false, true, 
-          "BL",
-          DriveConstants.BL_DIAMETER
-
-          );
+    backLeftModule = new SwerveModule(
+      DriveConstants.BACK_LEFT_DRIVE_ID, 
+      DriveConstants.BACK_LEFT_ROTATE_ID, 
+      DriveConstants.BACK_LEFT_CANCODER_ID, 
+      false,
+      true, 
+      "BL",
+      DriveConstants.BL_DIAMETER
+    );
   
-          backRightModule = new SwerveModule(
-          DriveConstants.BACK_RIGHT_DRIVE_ID, 
-          DriveConstants.BACK_RIGHT_ROTATE_ID, 
-          DriveConstants.BACK_RIGHT_CANCODER_ID,
+    backRightModule = new SwerveModule(
+      DriveConstants.BACK_RIGHT_DRIVE_ID, 
+      DriveConstants.BACK_RIGHT_ROTATE_ID, 
+      DriveConstants.BACK_RIGHT_CANCODER_ID,
+      false, 
+      true, 
+      "BR",
+      DriveConstants.BR_DIAMETER
+    );
 
-          false, true, 
-          "BR",
-          DriveConstants.BR_DIAMETER
-
-          );
-
-          swerveModules = new SwerveModule[4];
-          swerveModules[0] = frontLeftModule;
-          swerveModules[1] = frontRightModule;
-          swerveModules[2] = backLeftModule;
-          swerveModules[3] = backRightModule;
+    swerveModules = new SwerveModule[4];
+    swerveModules[0] = frontLeftModule;
+    swerveModules[1] = frontRightModule;
+    swerveModules[2] = backLeftModule;
+    swerveModules[3] = backRightModule;
   
-          field = new Field2d();
+    field = new Field2d();
 
-        /* Initalizes Kinematics */
-        kinematics = new SwerveDriveKinematics(
-  
-          /*Front Left */ new Translation2d(0.28575, 0.28575), //11.25 inches
-          /*Front Right */ new Translation2d(0.28575, -0.28575),
-          /*Back Left */ new Translation2d(-0.28575, 0.28575),
-          /*Back Right */ new Translation2d(-0.28575, -0.28575)
-  
-        );
+    /* Initalizes Kinematics */
+    kinematics = new SwerveDriveKinematics(
+      /*Front Left */ new Translation2d(0.28575, 0.28575), //11.25 inches
+      /*Front Right */ new Translation2d(0.28575, -0.28575),
+      /*Back Left */ new Translation2d(-0.28575, 0.28575),
+      /*Back Right */ new Translation2d(-0.28575, -0.28575)
+    );
   
         /* Initalize NavX (Gyro) */
-        NavX = new AHRS(AHRS.NavXComType.kMXP_SPI);
-
-        NavX.setAngleAdjustment(59.0);
-
-        // robotPose = new Pose2d();
-  
-        /* Initalizes Odometry */
-        // odometry = new SwerveDriveOdometry( 
-  
-        //   kinematics, 
-        //   new Rotation2d(gyroRad()),
-        //   getCurrentSwerveModulePositions()
-  
-        //   );
-        
-
-        // swervePoseEstimator.resetPose(new Pose2d());
-
-          // odometry.resetPose(new Pose2d(0,0,new Rotation2d(0)));
+    NavX = new AHRS(AHRS.NavXComType.kMXP_SPI);
+    NavX.setAngleAdjustment(59.0);
       
-        fieldOriented = false;
-        slowMode = false;
-        shootWhileMoving = false;
+    fieldOriented = false;
+    slowMode = false;
+    shootWhileMoving = false;
 
-      poseSupplier = () -> getPose2d();
-      resetPoseConsumer = pose -> setPose(pose);
-      robotRelativeOutput = chassisSpeeds -> drive(chassisSpeeds);
-      chasisSpeedSupplier = () -> getChassisSpeeds();
-      shouldFlipSupplier = () -> isRed();
-                       
-        try {
-          config = RobotConfig.fromGUISettings();
-        } catch(Exception e){
-          e.printStackTrace();
-        }
+    poseSupplier = () -> getPose2d();
+    resetPoseConsumer = pose -> setPose(pose);
+    robotRelativeOutput = chassisSpeeds -> drive(chassisSpeeds);
+    chasisSpeedSupplier = () -> getChassisSpeeds();
+    shouldFlipSupplier = () -> isRed();
 
-      SwerveModulePosition[] initialModulePositions = {
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition()
-      };
-
-        field = new Field2d();
-        driveAssist = false;
-  
-        configureAutoBuilder();
-        // syncEncoders();
-        // resetWheels();
-
-        swerveSysIdRoutine = new SysIdRoutine(
-          new Config(
-            Volts.of(1).per(Second),
-            Volts.of(3),
-            Seconds.of(5)
-          ),
-          new Mechanism(
-            (volts) -> runCharacterization(volts.in(Volts)), null, this)
-        );
-
-      new Thread(() -> {
-        try {
-          Thread.sleep(1000);
-          swervePoseEstimator = new SwerveDrivePoseEstimator(kinematics, new Rotation2d(gyroRad()), initialModulePositions, new Pose2d());
-        } catch (Exception e) {}
-      }).start();
+    try {
+      config = RobotConfig.fromGUISettings();
+    } 
+    catch(Exception e){
+      e.printStackTrace();
     }
 
-    public void runCharacterization(double output) {
-      for(int i = 0; i < 4; i++) {
-        swerveModules[i].runCharacterization(output);
-      }
+    SwerveModulePosition[] initialModulePositions = {
+      new SwerveModulePosition(),
+      new SwerveModulePosition(),
+      new SwerveModulePosition(),
+      new SwerveModulePosition()
+    };
+
+    field = new Field2d();
+    driveAssist = false;
+  
+    configureAutoBuilder();
+
+    swerveSysIdRoutine = new SysIdRoutine(
+      new Config(
+        Volts.of(1).per(Second),
+        Volts.of(3),
+        Seconds.of(5)
+      ),
+      new Mechanism(
+        (volts) -> runCharacterization(volts.in(Volts)), null, this)
+    );
+
+
+    swervePoseEstimator = new SwerveDrivePoseEstimator(kinematics, new Rotation2d(gyroRad()), initialModulePositions, new Pose2d());
+  }
+
+  public void runCharacterization(double output) {
+    for(int i = 0; i < 4; i++) {
+      swerveModules[i].runCharacterization(output);
     }
+  }
 
-    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-      return run(() -> runCharacterization(0.0))
-        .withTimeout(1.0)
-        .andThen(swerveSysIdRoutine.quasistatic(direction)).withTimeout(3.0);
+  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return run(() -> runCharacterization(0.0))
+      .withTimeout(1.0)
+      .andThen(swerveSysIdRoutine.quasistatic(direction)).withTimeout(3.0
+    );
+  }
+
+  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    return run(() -> runCharacterization(0.0))
+      .withTimeout(1.0)
+      .andThen(swerveSysIdRoutine.dynamic(direction)).withTimeout(3.0
+    );
+  }
+
+  public Command runSwerveSysID() {
+    return Commands.sequence(
+      swerveSysIdRoutine
+        .quasistatic(Direction.kForward)
+        .withTimeout(3),
+      swerveSysIdRoutine
+        .quasistatic(Direction.kReverse)
+        .withTimeout(3),
+      swerveSysIdRoutine
+        .dynamic(Direction.kForward)
+        .withTimeout(3),
+      swerveSysIdRoutine
+        .dynamic(Direction.kReverse)
+        .withTimeout(3)
+    );
+  }
+
+  /**Checks if the driver station is set to red alliance.
+  * @return {@code true} if driver station is set to red, {@code false} otherwise.
+  */
+  public Boolean isRed(){
+    var alliance = DriverStation.getAlliance();
+    return alliance.get() == DriverStation.Alliance.Red;
+  }
+
+  /**Toggles field oriented*/
+  public void toggleFieldOriented (){ 
+      fieldOriented = !fieldOriented;
+  }
+  
+  /**Toggles slow mode.*/
+  public void toggleSlowMode() {
+    slowMode = !slowMode;
+  }
+
+  public void toggleShootWhileMoving() {
+    shootWhileMoving = !shootWhileMoving;
+  }
+
+  /**Checks if the robot is in slow mode.
+  * @return {@code true} if the robot is in slow mode, {@code false} otherwise.
+  */
+  public boolean getSlowMode() {
+    return slowMode;
+  }
+
+  public boolean getShootWhileMoving() {
+    return shootWhileMoving;
+  }
+
+  public boolean getDriveAssist(){
+    return driveAssist;
+  }
+
+  public void toggleDriveAssist(){
+    this.driveAssist = !driveAssist;
+  }
+  
+  /**Gets the chassis speeds.
+  * @return The chassis speeds.
+  */
+  public ChassisSpeeds getChassisSpeeds(){
+    return kinematics.toChassisSpeeds(
+      frontLeftModule.getState(),
+      frontRightModule.getState(),
+      backLeftModule.getState(),
+      backRightModule.getState()
+    );
+  }
+  
+  /**This drive method takes the values from the chassisspeeds and
+   * applys it to each individual Module using the "SetState" Method created in SwerveModule.
+   * 
+   * @param chassisSpeeds The ChassisSpeeds to pull values from.
+   */
+  public void drive(ChassisSpeeds chassisSpeeds) {
+  
+    /* When Field Oriented is True, passes the chassis speed and the Gryo's current angle through "fromFieldRelativeSpeeds",
+     before passing it through the rest of the drive Method */
+  
+    if (fieldOriented) {
+      chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, new Rotation2d(gyroRad())); //NAVX USED TO BE HERE
     }
-
-    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-      return run(() -> runCharacterization(0.0))
-        .withTimeout(1.0)
-        .andThen(swerveSysIdRoutine.dynamic(direction)).withTimeout(3.0);
-    }
-
-    public Command runSwerveSysID() {
-      return Commands.sequence(
-        swerveSysIdRoutine
-          .quasistatic(Direction.kForward)
-          .withTimeout(3),
-        swerveSysIdRoutine
-          .quasistatic(Direction.kReverse)
-          .withTimeout(3),
-        swerveSysIdRoutine
-          .dynamic(Direction.kForward)
-          .withTimeout(3),
-        swerveSysIdRoutine
-          .dynamic(Direction.kReverse)
-          .withTimeout(3)
-      );
-    }
-
-    /**Checks if the driver station is set to red alliance.
-     * 
-     * @return {@code true} if driver station is set to red, {@code false} otherwise.
-     */
-      public Boolean isRed(){
-        var alliance = DriverStation.getAlliance();
-        return alliance.get() == DriverStation.Alliance.Red;
-      }
+    SwerveModuleState swerveModuleStates[] = kinematics.toWheelSpeeds(chassisSpeeds);
   
-      /**Toggles field oriented.
-       * 
-       */
-      public void toggleFieldOriented (){
-        
-        fieldOriented = !fieldOriented;
+    frontLeftModule.setState(swerveModuleStates[0]);
+    frontRightModule.setState(swerveModuleStates[1]);
+    backLeftModule.setState(swerveModuleStates[2]);
+    backRightModule.setState(swerveModuleStates[3]);
+
+    this.chassisSpeeds = chassisSpeeds;
+  }
   
-      }
+  /**Spins the wheels.
+   * 
+   */
+  public void testDrive(){
   
-      /**Toggles slow mode.
-       * 
-       */
-      public void toggleSlowMode() {
-      slowMode = !slowMode;
-      }
-
-      public void toggleShootWhileMoving() {
-        shootWhileMoving = !shootWhileMoving;
-      }
-
-      /**Checks if the robot is in slow mode.
-       * 
-       * @return {@code true} if the robot is in slow mode, {@code false} otherwise.
-       */
-      public boolean getSlowMode() {
-        return slowMode;
-      }
-
-      public boolean getShootWhileMoving() {
-        return shootWhileMoving;
-      }
-
-      public boolean getDriveAssist(){
-        return driveAssist;
-      }
-
-      public void toggleDriveAssist(){
-        this.driveAssist = !driveAssist;
-      }
+    ChassisSpeeds testSpeeds = new ChassisSpeeds(Units.inchesToMeters(1), Units.inchesToMeters(0), Units.degreesToRadians(0));
   
-      /**Gets the chassis speeds.
-       * 
-       * @return The chassis speeds.
-       */
-      public ChassisSpeeds getChassisSpeeds(){
-        return kinematics.toChassisSpeeds(
-          frontLeftModule.getState(),
-          frontRightModule.getState(),
-          backLeftModule.getState(),
-          backRightModule.getState()
-        );
-      }
+    SwerveModuleState[] swerveModuleStates = kinematics.toWheelSpeeds(testSpeeds);
   
-        /**This drive method takes the values from the chassisspeeds and
-         * applys it to each individual Module using the "SetState" Method created in SwerveModule.
-         * 
-         * @param chassisSpeeds The ChassisSpeeds to pull values from.
-         */
-        public void drive(ChassisSpeeds chassisSpeeds) {
-  
-          /* When Field Oriented is True, passes the chassis speed and the Gryo's current angle through "fromFieldRelativeSpeeds",
-           before passing it through the rest of the drive Method */
-  
-          if (fieldOriented) {
-            chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, new Rotation2d(gyroRad())); //NAVX USED TO BE HERE
-  
-          }
+    frontLeftModule.setState(swerveModuleStates[0]);
+    frontRightModule.setState(swerveModuleStates[1]);
+    backLeftModule.setState(swerveModuleStates[2]);
+    backRightModule.setState(swerveModuleStates[3]);
+  }
 
-          SwerveModuleState swerveModuleStates[] = kinematics.toWheelSpeeds(chassisSpeeds);
+  /**Gets the current module positions.
+   * 
+   * @return The current module positions.
+   */
+  public SwerveModulePosition[] getCurrentSwerveModulePositions(){
+    return new SwerveModulePosition[]{
+      new SwerveModulePosition(frontLeftModule.getDistance(), new Rotation2d(frontLeftModule.getRotateEncoderPosition())), // Front left
+      new SwerveModulePosition(frontRightModule.getDistance(), new Rotation2d(frontRightModule.getRotateEncoderPosition())), // Front Right
+      new SwerveModulePosition(backLeftModule.getDistance(), new Rotation2d(backLeftModule.getRotateEncoderPosition())), // Back Left
+      new SwerveModulePosition(backRightModule.getDistance(), new Rotation2d(backRightModule.getRotateEncoderPosition())) // Back Right
+    };
+  } 
 
-  
-          frontLeftModule.setState(swerveModuleStates[0]);
-          frontRightModule.setState(swerveModuleStates[1]);
-          backLeftModule.setState(swerveModuleStates[2]);
-          backRightModule.setState(swerveModuleStates[3]);
+  /**Stops all modules.
+   * 
+   */
+  public void stopModules() {
+    frontLeftModule.stop();
+    frontRightModule.stop();
+    backLeftModule.stop();
+    backRightModule.stop();
+  }
 
-          this.chassisSpeeds = chassisSpeeds;
+  /**Gets the pose2d of the robot.
+   * 
+   * @return The pose2d of the robot.
+   */
+  public Pose2d getPose2d(){
+    return swervePoseEstimator.getEstimatedPosition();
+  }
 
-    }
-  
-        /**Spins the wheels.
-         * 
-         */
-        public void testDrive(){
-  
-          ChassisSpeeds testSpeeds = new ChassisSpeeds(Units.inchesToMeters(1), Units.inchesToMeters(0), Units.degreesToRadians(0));
-  
-          SwerveModuleState[] swerveModuleStates = kinematics.toWheelSpeeds(testSpeeds);
-  
-          frontLeftModule.setState(swerveModuleStates[0]);
-          frontRightModule.setState(swerveModuleStates[1]);
-          backLeftModule.setState(swerveModuleStates[2]);
-          backRightModule.setState(swerveModuleStates[3]);
-        }
+  /**Resets the odometry. This sets everything to 0.
+   * 
+   */
+  public void resetOdometry(){
+    SwerveModulePosition[] blankModulePositions = new SwerveModulePosition[4];
+    Arrays.fill(blankModulePositions, new SwerveModulePosition());
 
-        /**Gets the current module positions.
-         * 
-         * @return The current module positions.
-         */
-        public SwerveModulePosition[] getCurrentSwerveModulePositions(){
-          return new SwerveModulePosition[]{
-  
-              new SwerveModulePosition(frontLeftModule.getDistance(), new Rotation2d(frontLeftModule.getRotateEncoderPosition())), // Front left
-              new SwerveModulePosition(frontRightModule.getDistance(), new Rotation2d(frontRightModule.getRotateEncoderPosition())), // Front Right
-              new SwerveModulePosition(backLeftModule.getDistance(), new Rotation2d(backLeftModule.getRotateEncoderPosition())), // Back Left
-              new SwerveModulePosition(backRightModule.getDistance(), new Rotation2d(backRightModule.getRotateEncoderPosition())) // Back Right
-  
-          };
-        } 
+    swervePoseEstimator.resetPosition(new Rotation2d(), swerveModulePositions, new Pose2d());
+  }
 
-      /**Stops all modules.
-       * 
-       */
-      public void stopModules() {
-        frontLeftModule.stop();
-        frontRightModule.stop();
-        backLeftModule.stop();
-        backRightModule.stop();
-    }
+  /**Updates the odometry using the encoders.
+   * 
+   */
+  public void updateOdometry() {
+    swervePoseEstimator.update(new Rotation2d(gyroRad()), getCurrentSwerveModulePositions());
+  }
 
-    // public void resetWheels() {
-    //   frontLeftModule.resetWheel();
-    //   frontRightModule.resetWheel();
-    //   backLeftModule.resetWheel();
-    //   backRightModule.resetWheel();
-    // }
-
-    /**Gets the pose2d of the robot.
-     * 
-     * @return The pose2d of the robot.
-     */
-    public Pose2d getPose2d(){
-      return swervePoseEstimator.getEstimatedPosition();
-    }
-
-    /**Resets the odometry. This sets everything to 0.
-     * 
-     */
-    public void resetOdometry(){
-      SwerveModulePosition[] blankModulePositions = new SwerveModulePosition[4];
-      Arrays.fill(blankModulePositions, new SwerveModulePosition());
-
-      swervePoseEstimator.resetPosition(new Rotation2d(), swerveModulePositions, new Pose2d());
-    }
-
-    /**Updates the odometry using the encoders.
-     * 
-     */
-    public void updateOdometry() {
-      swervePoseEstimator.update(new Rotation2d(gyroRad()), getCurrentSwerveModulePositions());
-    }
-
-    /**Updates the odometry using vision.
-     * 
-     */
-    public void updateOdometryWithVision() {
-      swervePoseEstimator.addVisionMeasurement(photonVision.getRobotPose2d().get(), Timer.getFPGATimestamp());
-    }
+  /**Updates the odometry using vision.
+   * 
+   */
+  public void updateOdometryWithVision() {
+    swervePoseEstimator.addVisionMeasurement(photonVision.getRobotPose2d().get(), Timer.getFPGATimestamp());
+  }
     
-    /**Gets the NavX.
-     * 
-     * @return The NavX.
-     */
-    public AHRS getGyro(){
-      return NavX;
-    }
+  /**Gets the NavX.
+   * 
+   * @return The NavX.
+   */
+  public AHRS getGyro(){
+    return NavX;
+  }
 
-    /**Gets the reading of the NavX in radians.
-     * 
-     * @return The angle in radians.
-     */
-    public double  gyroRad(){
-      return (NavX.getAngle() * Math.PI/180);
-    }
+  /**Gets the reading of the NavX in radians.
+   * 
+   * @return The angle in radians.
+   */
+  public double  gyroRad(){
+    return (NavX.getAngle() * Math.PI/180);
+  }
 
-    public void resetNavX() {
-      NavX.reset();
-    }
+  public void resetNavX() {
+    NavX.reset();
+  }
 
-    /**Resets the pose2d of the robot. This sets everything to 0.
-     * 
-     */
-    public void resetPose(){
-      swervePoseEstimator.resetPose(new Pose2d());
-    }
+  /**Resets the pose2d of the robot. This sets everything to 0.
+   * 
+   */
+  public void resetPose(){
+    swervePoseEstimator.resetPose(new Pose2d());
+  }
 
-    /**Sets the pose2d of the robot to the given pose2d.
-     * 
-     * @param pose The pose2d to set the pose2d to.
-     */
-    public void setPose(Pose2d pose) {
-      swervePoseEstimator.resetPose(pose);
-    }
+  /**Sets the pose2d of the robot to the given pose2d.
+   * 
+   * @param pose The pose2d to set the pose2d to.
+   */
+  public void setPose(Pose2d pose) {
+    swervePoseEstimator.resetPose(pose);
+  }
 
-    // /**Updates the pose2d using vision.
-    //  * 
-    //  */
-    // public void updatePoseWithVision() {
-    //   odometry.resetPose(photonVision.getRobotPose2d().get());
-    // }
+  /**Spins the back right rotate motor.
+   * 
+   */
+  public void spinBR(){
+    backRightModule.spinRotate();
+  }
 
-    /**Spins the back right rotate motor.
-     * 
-     */
-    public void spinBR(){
-      backRightModule.spinRotate();
-    }
+  public void setDriveVoltage(double volts) {
+    frontLeftModule.setDriveVoltage(volts);
+    frontRightModule.setDriveVoltage(volts);
+    backLeftModule.setDriveVoltage(volts);
+    backRightModule.setDriveVoltage(volts);
+  }
 
-    public void setDriveVoltage(double volts) {
-      frontLeftModule.setDriveVoltage(volts);
-      frontRightModule.setDriveVoltage(volts);
-      backLeftModule.setDriveVoltage(volts);
-      backRightModule.setDriveVoltage(volts);
-    }
+  public void syncEncoders() {
+    frontRightModule.syncEncoders();
+    frontLeftModule.syncEncoders();
+    backRightModule.syncEncoders();
+    backLeftModule.syncEncoders();
+  }
 
-    public void syncEncoders() {
-      frontRightModule.syncEncoders();
-      frontLeftModule.syncEncoders();
-      backRightModule.syncEncoders();
-      backLeftModule.syncEncoders();
-    }
-
-      /**
+  /**
    * @return Y coordinate of the turret on the field
    */
   public double getTurretY(){
     double h = photonVision.tagIsPresentAcrossAllCameras() ? photonVision.getRobotY().get() : swervePoseEstimator.getEstimatedPosition().getY(); //robot y coordinate
     double k = photonVision.tagIsPresentAcrossAllCameras() ? photonVision.getRobotX().get() : swervePoseEstimator.getEstimatedPosition().getX(); //robot x coordinate
-    // double h = photonVision.getRobotY().get();
-    // double k = photonVision.getRobotX().get();
     double robotAngle = ((getGyro().getYaw() % 360.0) + 360) % 360; //Robot rotation
     double y = h + TurretConstants.TURRET_OFFSET_Y;
     double x = k + TurretConstants.TURRET_OFFSET_X;
@@ -518,8 +462,6 @@ public class SwerveDrive extends SubsystemBase {
   public double getTurretX(){
     double h = photonVision.tagIsPresentAcrossAllCameras() ? photonVision.getRobotY().get() : swervePoseEstimator.getEstimatedPosition().getY(); //robot y coordinate
     double k = photonVision.tagIsPresentAcrossAllCameras() ? photonVision.getRobotX().get() : swervePoseEstimator.getEstimatedPosition().getX(); //robot x coordinate
-    // double h = photonVision.getRobotY().get();
-    // double k = photonVision.getRobotX().get();
     double robotAngle = ((getGyro().getYaw() % 360.0) + 360) % 360; //Robot rotation in degrees
     double y = h + TurretConstants.TURRET_OFFSET_Y; //Original y coordinate of turret relative to robot center y coordinate
     double x = k + TurretConstants.TURRET_OFFSET_X; //Original x coordinate of turret relative to robot center x coordinate
@@ -529,108 +471,107 @@ public class SwerveDrive extends SubsystemBase {
     /**Configures the auto builder for PathPlanner.
      * 
      */
-    public void configureAutoBuilder() {
-      AutoBuilder.configure(
-        poseSupplier, 
-        resetPoseConsumer, 
-        chasisSpeedSupplier, 
-        robotRelativeOutput, 
-        DriveConstants.PATH_CONFIG_CONTROLLER, 
-        config, 
-        shouldFlipSupplier,
-        this
-        );
+  public void configureAutoBuilder() {
+    AutoBuilder.configure(
+      poseSupplier, 
+      resetPoseConsumer, 
+      chasisSpeedSupplier, 
+      robotRelativeOutput, 
+      DriveConstants.PATH_CONFIG_CONTROLLER, 
+      config, 
+      shouldFlipSupplier,
+      this
+      );
+  }
+
+  public double[] getRotateEncoderPosition() {
+    double[] rotations = new double[4];
+
+    for(int i = 0; i < 4; i++) {
+      rotations[i] = swerveModules[i].getRotateEncoderPosition();
     }
 
-    public double[] getRotateEncoderPosition() {
-      double[] rotations = new double[4];
+    return rotations;
+  }
 
-      for(int i = 0; i < 4; i++) {
-        rotations[i] = swerveModules[i].getRotateEncoderPosition();
-      }
+  public double getDriveEncoderVelocity() {
+    double velocity = 0.0;
 
-      return rotations;
+    for(int i = 0; i < 4; i++) {
+      velocity += swerveModules[i].getDriveVelocityRad() / 4.0; 
     }
 
-    public double getDriveEncoderVelocity() {
-      double velocity = 0.0;
+    return velocity;
+  }
 
-      for(int i = 0; i < 4; i++) {
-        velocity += swerveModules[i].getDriveVelocityRad() / 4.0; 
-      }
+  /**Puts the front left module values onto Elastic.
+   * 
+   * @param sendableBuilder The SendableBuilder to use.
+   */
+  public void putFrontLeftValues(SendableBuilder sendableBuilder){
+    sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Rotate Encoder(Radians): " , ()-> frontLeftModule.getRotateEncoderPosition(), null);
+    sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Rotate Setpoint", () -> frontLeftModule.getRotateSetpoint(), null);
+    sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Absolute Position " , ()-> frontLeftModule.absoluteRotatePosition(), null);
+    sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Velocity", () -> frontLeftModule.getDriveVelocity(), null);
+    sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " drive setpoint", () -> (frontLeftModule.getDriveSetpoint()), null);
+    sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Drive Voltage", () -> frontLeftModule.getDriveVoltage(), null);
+    sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Drive Position", () -> frontLeftModule.getDrivePosition(), null);
+    if(swerveModuleStates != null)
+      sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Analog Offest " , ()-> swerveModuleStates[0].angle.getRadians(), null);
 
-      return velocity;
-    }
+  }
 
-    /**Puts the front left module values onto Elastic.
-     * 
-     * @param sendableBuilder The SendableBuilder to use.
-     */
-    public void putFrontLeftValues(SendableBuilder sendableBuilder){
-      sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Rotate Encoder(Radians): " , ()-> frontLeftModule.getRotateEncoderPosition(), null);
-      sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Rotate Setpoint", () -> frontLeftModule.getRotateSetpoint(), null);
-      sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Absolute Position " , ()-> frontLeftModule.absoluteRotatePosition(), null);
-      sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Velocity", () -> frontLeftModule.getDriveVelocity(), null);
-      sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " drive setpoint", () -> (frontLeftModule.getDriveSetpoint()), null);
-      sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Drive Voltage", () -> frontLeftModule.getDriveVoltage(), null);
-      sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Drive Position", () -> frontLeftModule.getDrivePosition(), null);
-      if(swerveModuleStates != null)
-        sendableBuilder.addDoubleProperty(frontLeftModule.printLabel() + " Analog Offest " , ()-> swerveModuleStates[0].angle.getRadians(), null);
+  /**Puts the front right module values onto Elastic.
+   * 
+   * @param sendableBuilder The SendableBuilder to use.
+   */
+  public void putFrontRightValues(SendableBuilder sendableBuilder){
+    sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Rotate Encoder(Radians): " , ()-> frontRightModule.getRotateEncoderPosition(), null);
+    sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Rotate Setpoint", () -> frontRightModule.getRotateSetpoint(), null);
+    sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Absolute Position " , ()-> frontRightModule.absoluteRotatePosition(), null);
+    sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + "Velocity", () -> frontRightModule.getDriveVelocity(), null);
+    sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " drive setpoint", () -> (frontRightModule.getDriveSetpoint()), null);
+    sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Drive Voltage", () -> frontRightModule.getDriveVoltage(), null);
+    sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Drive Position", () -> frontRightModule.getDrivePosition(), null);
+    if(swerveModuleStates != null)
+      sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Analog Offest " , ()-> swerveModuleStates[1].angle.getRadians(), null);
+  }
 
-    }
+  /**Puts the back left module values onto Elastic.
+   * 
+   * @param sendableBuilder The SendableBuilder to use.
+   */
+  public void putBackLeftModule(SendableBuilder sendableBuilder){
+    sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Rotate Encoder(Radians): " , ()-> backLeftModule.getRotateEncoderPosition(), null);
+    sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Rotate Setpoint", () -> backLeftModule.getRotateSetpoint(), null);
+    sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Absoulete Position " , ()-> backLeftModule.absoluteRotatePosition(), null);
+    sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + "Velocity", () -> backLeftModule.getDriveVelocity(), null);
+    sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " drive setpoint", () -> (backLeftModule.getDriveSetpoint()), null);
+    sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Drive Voltage", () -> backLeftModule.getDriveVoltage(), null);
+    sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Drive Position", () -> backLeftModule.getDrivePosition(), null);
+    if(swerveModuleStates != null)
+      sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Analog Offest " , ()-> swerveModuleStates[2].angle.getRadians(), null);
+  }
 
-    /**Puts the front right module values onto Elastic.
-     * 
-     * @param sendableBuilder The SendableBuilder to use.
-     */
-    public void putFrontRightValues(SendableBuilder sendableBuilder){
-      sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Rotate Encoder(Radians): " , ()-> frontRightModule.getRotateEncoderPosition(), null);
-      sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Rotate Setpoint", () -> frontRightModule.getRotateSetpoint(), null);
-      sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Absolute Position " , ()-> frontRightModule.absoluteRotatePosition(), null);
-      sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + "Velocity", () -> frontRightModule.getDriveVelocity(), null);
-      sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " drive setpoint", () -> (frontRightModule.getDriveSetpoint()), null);
-      sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Drive Voltage", () -> frontRightModule.getDriveVoltage(), null);
-      sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Drive Position", () -> frontRightModule.getDrivePosition(), null);
-      if(swerveModuleStates != null)
-        sendableBuilder.addDoubleProperty(frontRightModule.printLabel() + " Analog Offest " , ()-> swerveModuleStates[1].angle.getRadians(), null);
-    }
+  /**Puts the back right module values onto Elastic.
+   * 
+   * @param sendableBuilder The SendableBuilder to use.
+   */
+  public void putBackRightModule(SendableBuilder sendableBuilder){
+    sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " Rotate Encoder(Radians): " , ()-> backRightModule.getRotateEncoderPosition(), null);
+    sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " Rotate Setpoint", () -> backRightModule.getRotateSetpoint(), null);
+    sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " Absoulete Position " , ()-> backRightModule.absoluteRotatePosition(), null);
+    sendableBuilder.addDoubleProperty(backRightModule.printLabel() + "Velocity", () -> backRightModule.getDriveVelocity(), null);
+    sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " drive setpoint", () -> (backRightModule.getDriveSetpoint()), null);
+    sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " Drive Voltage", () -> backRightModule.getDriveVoltage(), null);
+    sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " Drive Position", () -> backRightModule.getDrivePosition(), null);
+    if(swerveModuleStates != null)
+      sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " Analog Offest " , ()-> swerveModuleStates[3].angle.getRadians(), null);
+  }
 
-    /**Puts the back left module values onto Elastic.
-     * 
-     * @param sendableBuilder The SendableBuilder to use.
-     */
-    public void putBackLeftModule(SendableBuilder sendableBuilder){
-      sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Rotate Encoder(Radians): " , ()-> backLeftModule.getRotateEncoderPosition(), null);
-      sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Rotate Setpoint", () -> backLeftModule.getRotateSetpoint(), null);
-      sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Absoulete Position " , ()-> backLeftModule.absoluteRotatePosition(), null);
-      sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + "Velocity", () -> backLeftModule.getDriveVelocity(), null);
-      sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " drive setpoint", () -> (backLeftModule.getDriveSetpoint()), null);
-      sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Drive Voltage", () -> backLeftModule.getDriveVoltage(), null);
-      sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Drive Position", () -> backLeftModule.getDrivePosition(), null);
-      if(swerveModuleStates != null)
-        sendableBuilder.addDoubleProperty(backLeftModule.printLabel() + " Analog Offest " , ()-> swerveModuleStates[2].angle.getRadians(), null);
-
-    }
-
-    /**Puts the back right module values onto Elastic.
-     * 
-     * @param sendableBuilder The SendableBuilder to use.
-     */
-    public void putBackRightModule(SendableBuilder sendableBuilder){
-      sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " Rotate Encoder(Radians): " , ()-> backRightModule.getRotateEncoderPosition(), null);
-      sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " Rotate Setpoint", () -> backRightModule.getRotateSetpoint(), null);
-      sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " Absoulete Position " , ()-> backRightModule.absoluteRotatePosition(), null);
-      sendableBuilder.addDoubleProperty(backRightModule.printLabel() + "Velocity", () -> backRightModule.getDriveVelocity(), null);
-      sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " drive setpoint", () -> (backRightModule.getDriveSetpoint()), null);
-      sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " Drive Voltage", () -> backRightModule.getDriveVoltage(), null);
-      sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " Drive Position", () -> backRightModule.getDrivePosition(), null);
-      if(swerveModuleStates != null)
-        sendableBuilder.addDoubleProperty(backRightModule.printLabel() + " Analog Offest " , ()-> swerveModuleStates[3].angle.getRadians(), null);
-    }
-
-    /**Puts all swerve drive values onto Elastic.
-     * 
-     */
+  /**Puts all swerve drive values onto Elastic.
+   * 
+   */
   @Override 
   public void initSendable(SendableBuilder sendableBuilder){
     putFrontLeftValues(sendableBuilder);
@@ -664,23 +605,10 @@ public class SwerveDrive extends SubsystemBase {
     sendableBuilder.addDoubleArrayProperty("All Wheel Rotations", () -> getRotateEncoderPosition(), null);
     
     SmartDashboard.putData(field);
-
   }
       
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
-
-    //Updates the odometry every run
-
-    // if(DriverStation.isTeleop()) {
-    //   if(photonVision.tagIsPresentAcrossAllCameras()) {
-    //     updateOdometryWithVision();
-    //   }else{
-    //     updateOdometry();
-    //   }
-    // }
-
     if(photonVision.tagIsPresentAcrossAllCameras()) {
       swervePoseEstimator.addVisionMeasurement(photonVision.getRobotPose2d().get(), photonVision.getTimestampOfPose());
     }
@@ -688,10 +616,7 @@ public class SwerveDrive extends SubsystemBase {
     swervePoseEstimator.updateWithTime(Timer.getFPGATimestamp(), new Rotation2d(gyroRad()), getCurrentSwerveModulePositions());
 
     field.setRobotPose(swervePoseEstimator.getEstimatedPosition());
-    // field.setRobotPose(photonVision.getRobotPose2d().get());
 
     photonVision.setTurretPose2d(getTurretX(), getTurretY(), -(getGyro().getAngle() % 360) - 180);
-    // photonVision.setPose2d(odometry.getPoseMeters());
-    // photonVision.setPose2d(photonVision.getRobotPose2d().get());
   }
 }
