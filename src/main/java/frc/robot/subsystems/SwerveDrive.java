@@ -21,6 +21,7 @@ import javax.print.attribute.standard.MediaSize.NA;
 import org.json.simple.parser.ParseException;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.fasterxml.jackson.core.filter.FilteringGeneratorDelegate;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.RobotConfig;
@@ -165,7 +166,7 @@ public class SwerveDrive extends SubsystemBase {
         /* Initalize NavX (Gyro) */
         NavX = new AHRS(AHRS.NavXComType.kMXP_SPI);
 
-        NavX.setAngleAdjustment(68.480001227);
+        NavX.setAngleAdjustment(59.0);
 
         // robotPose = new Pose2d();
   
@@ -450,6 +451,10 @@ public class SwerveDrive extends SubsystemBase {
       return (NavX.getAngle() * Math.PI/180);
     }
 
+    public void resetNavX() {
+      NavX.reset();
+    }
+
     /**Resets the pose2d of the robot. This sets everything to 0.
      * 
      */
@@ -556,7 +561,6 @@ public class SwerveDrive extends SubsystemBase {
 
       return velocity;
     }
-    
 
     /**Puts the front left module values onto Elastic.
      * 

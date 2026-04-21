@@ -54,6 +54,7 @@ public class RobotContainer {
   private final CustomXboxController driver;
   private final CustomXboxController operator;
 
+  private final JoystickButton resetGyroButton;
   private final JoystickButton fieldOrientedButton;
   private final JoystickButton turretToggleButton;
   private final JoystickButton toggleWristButton;
@@ -73,6 +74,7 @@ public class RobotContainer {
   private final DriveWithJoystick driveWithJoystick;
   private final MoveWristWithJoystick moveWristWithJoystick;
 
+  private final Command resetGyro;
   private final Command toggleFieldOriented;
   // private final Command turretToAngle;
   private final Command toggleManualTurret;
@@ -107,6 +109,7 @@ public class RobotContainer {
     driver = new CustomXboxController(0);
     operator = new CustomXboxController(1);
 
+    resetGyro = Commands.runOnce(() -> swere.resetNavX(), swere);
     toggleFieldOriented = Commands.runOnce(() -> {swere.toggleFieldOriented();}, swere);
     toggleManualTurret = Commands.runOnce(() -> {turret.toggleManual();});
     toggleDriveAssist = Commands.runOnce(() -> {swere.toggleDriveAssist();}, swere);
@@ -118,19 +121,20 @@ public class RobotContainer {
     wristUp = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_UP_POSITION, operator), intake);
     wristMiddle = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_MIDDLE_POSITION, operator), intake);
     getFuelUnstuck = Commands.runEnd(() -> {intake.spinIntake(0.6);}, () -> intake.stopIntake(), intake);
-    intakeFuel = Commands.runEnd(() -> {intake.spinIntake(-1);}, () -> intake.stopIntake());
+    intakeFuel = Commands.runEnd(() -> {intake.spinIntake(-0.95);}, () -> intake.stopIntake());
     shoot = Commands.runEnd(() -> shooter.shootWithDistance(1, photonVision.getTurretPose2d().get()), () -> shooter.stopShooterAndFeeder(), shooter);
     
     // turretShoot = Commands.runEnd(() -> shooter.shootWithoutPID(-0.17, -0.52, 1), () -> shooter.stopShooterAndFeeder(), shooter);
     turretShoot = Commands.runEnd(() -> shooter.shootWithSpeed(9.2, 9.4, 1), () -> shooter.stopShooterAndFeeder(), shooter);
     downtake = Commands.parallel(
       Commands.runEnd(() -> shooter.feed(-0.9), () -> shooter.feed(0), shooter),
-      Commands.runEnd(() -> spindexer.SpindexerWithSpeed(-0.5), () -> spindexer.SpindexerWithSpeed(0), spindexer)
+      Commands.runEnd(() -> spindexer.SpindexerWithSpeed(-0.65), () -> spindexer.SpindexerWithSpeed(0), spindexer)
     );
     shootWhileMoving = Commands.runEnd(() -> shooter.shootWithDistance(1, turret.getLookAheadPoses()[1]), () -> shooter.stopShooterAndFeeder(), shooter);
 
     driveWithJoystick = new DriveWithJoystick(swere, driver, photonVision);
     moveWristWithJoystick = new MoveWristWithJoystick(intake, operator);
+    resetGyroButton = new JoystickButton(driver, XboxController.Button.kLeftBumper.value);
     fieldOrientedButton = new JoystickButton(driver, XboxController.Button.kA.value);
     turretToggleButton = new JoystickButton(operator, XboxController.Button.kRightStick.value);
     turretFastModeToggleButton = new JoystickButton(operator, XboxController.Button.kA.value);
@@ -173,7 +177,8 @@ public class RobotContainer {
     autoChooser.addOption("Basic Right Turret Auto", Autos.basicRightTurretAuto(swere, shooter, turret, photonVision, operator));
     autoChooser.addOption("Right Neutral Zone Auto", Autos.rightNeutralZoneAuto(swere, shooter, turret, photonVision, intake, operator));
     autoChooser.addOption("Straight Line Auto", Autos.straightLineAuto(swere));
-    autoChooser.addOption("Basic Left Turret Auto", Autos.basicLeftTurretAuto(swere, shooter, turret, photonVision, driver));
+    autoChooser.addOption("Basic Left Turret Auto", Autos.basicLeftTurretAuto(swere, shooter, turret, photonVision, operator));
+    autoChooser.addOption("Depot Auto", Autos.depotAuto(swere, shooter, turret, photonVision, intake, operator));
     
     swere.setDefaultCommand(driveWithJoystick);
     // turret.setDefaultCommand(Commands.run(() -> turret.manualTurret(operator), turret));
@@ -211,6 +216,7 @@ public class RobotContainer {
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
     m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
+    // resetGyroButton.onTrue(resetGyro);
     fieldOrientedButton.onTrue(toggleFieldOriented); // 'A' button
     turretToggleButton.onTrue(Commands.run(() -> turret.trackLookAheadPose(photonVision.getHubCenterPose2d(), operator), turret)); // 'Start' button
     toggleDriveAssistButton.onTrue(toggleDriveAssist); // 'B' button

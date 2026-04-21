@@ -78,7 +78,7 @@ public class Intake extends SubsystemBase {
 
     intakeConfig.CurrentLimits
       .withSupplyCurrentLimitEnable(true)
-      .withSupplyCurrentLimit(80);
+      .withSupplyCurrentLimit(60);
 
     intakeConfig.MotorOutput
       .withNeutralMode(NeutralModeValue.Brake);
