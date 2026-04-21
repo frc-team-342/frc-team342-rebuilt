@@ -52,24 +52,7 @@ public class Spindexer extends SubsystemBase {
     return isShooting;
   }
 
-  /**Sets shooterUpToSpeed to the inputted boolean value.
-   * 
-   */
-  public void setAtDesiredSpeed(boolean atDesiredSpeed) {
-    shooterUpToSpeed = atDesiredSpeed;
-  }
-
-  /**Checks if the shooter is at the desired speed.
-   * 
-   * @return {@code true} if the shooter is up to speed, {@code false} otherwise.
-   */
-  public boolean AtDesiredSpeed() {
-    return shooterUpToSpeed;
-  }
-
-  /**
-   * Spins the spindexer if the shooter is running.
-   */
+  /** Spins the spindexer if the shooter is running.*/
   public void spinSpindexer(){
     if(isShooting) {
       spindexer.set(0.6);
@@ -80,7 +63,6 @@ public class Spindexer extends SubsystemBase {
   }
 
   /**Spins the spindexer at a set speed.
-   * 
    * @param speed The speed to spin the spindexer at.
    */
   public void SpindexerWithSpeed(double speed) {
@@ -109,6 +91,5 @@ public class Spindexer extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // spindexer.set(0.1);
   }
 }
