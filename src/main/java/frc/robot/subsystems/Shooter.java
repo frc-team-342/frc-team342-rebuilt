@@ -5,7 +5,6 @@
 package frc.robot.subsystems;
 
 import static frc.robot.Constants.ShooterConstants.*;
-import frc.robot.subsystems.Spindexer;
 
 import static edu.wpi.first.units.Units.Volts;
 import static edu.wpi.first.units.Units.Second;
@@ -15,9 +14,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -40,6 +36,7 @@ public class Shooter extends SubsystemBase {
   private SparkFlex bottomShooterMotor;
   private SparkFlex bottomFeederMotor;
   private SparkFlex topFeederMotor;
+  private SparkFlex spindexerMotor;
 
   private RelativeEncoder topShooterEncoder;
   private RelativeEncoder bottomShooterEncoder;
@@ -50,6 +47,7 @@ public class Shooter extends SubsystemBase {
   private SparkFlexConfig bottomShooterMotorConfig;
   private SparkFlexConfig bottomFeederMotorConfig;
   private SparkFlexConfig topFeederMotorConfig;
+  private SparkFlexConfig spindexerMotorConfig;
 
   private SparkClosedLoopController topShooterPID;
   private SparkClosedLoopController bottomShooterPID;
@@ -58,17 +56,19 @@ public class Shooter extends SubsystemBase {
   private InterpolatingDoubleTreeMap bottomShooterMap;
   private InterpolatingDoubleTreeMap flightTimeMap;
 
-  private Spindexer spindexer;
   private PhotonVision photonVision;
 
   private SysIdRoutine topShooterSysIDRoutine;
   private SysIdRoutine bottomShooterSysIDRoutine;
+
+  private boolean isShooting;
   /** Creates a new Shooter. */
-  public Shooter(Spindexer spindexer, PhotonVision photonVision) {
+  public Shooter(PhotonVision photonVision) {
     topShooterMotor = new SparkFlex(TOP_SHOOTER_MOTOR_ID, MotorType.kBrushless);
     bottomShooterMotor =  new SparkFlex(BOTTOM_SHOOTER_MOTOR_ID, MotorType.kBrushless);
     bottomFeederMotor = new SparkFlex(BOTTOM_FEEDER_MOTOR_ID, MotorType.kBrushless);
     topFeederMotor = new SparkFlex(TOP_FEEDER_MOTOR_ID, MotorType.kBrushless);
+    spindexerMotor = new SparkFlex(SPINDEXER_ID, null);
 
     topShooterEncoder = topShooterMotor.getEncoder();
     bottomShooterEncoder = bottomShooterMotor.getEncoder();
@@ -79,6 +79,7 @@ public class Shooter extends SubsystemBase {
     bottomShooterMotorConfig = new SparkFlexConfig();
     bottomFeederMotorConfig = new SparkFlexConfig();
     topFeederMotorConfig = new SparkFlexConfig();
+    spindexerMotorConfig = new SparkFlexConfig();
 
     topShooterPID = topShooterMotor.getClosedLoopController();
     bottomShooterPID = bottomShooterMotor.getClosedLoopController();
@@ -117,25 +118,24 @@ public class Shooter extends SubsystemBase {
       .apply(bottomFeederMotorConfig)
       .follow(BOTTOM_FEEDER_MOTOR_ID);
 
+    spindexerMotorConfig
+      .idleMode(IdleMode.kCoast)
+      .smartCurrentLimit(60);
+
     topShooterMotor.configure(topShooterMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     bottomShooterMotor.configure(bottomShooterMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     bottomFeederMotor.configure(bottomFeederMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     topFeederMotor.configure(topFeederMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    spindexerMotor.configure(spindexerMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     topShooterMap = new InterpolatingDoubleTreeMap();
     bottomShooterMap = new InterpolatingDoubleTreeMap();
     flightTimeMap = new InterpolatingDoubleTreeMap();
 
     mapShooterVelocities();
+    mapShooterFlightTimes();
 
-    flightTimeMap.put(2.125070162186267, 0.8383);
-    flightTimeMap.put(2.285342474424601, 0.848);
-    flightTimeMap.put(2.755924648570551, 0.9343);
-    flightTimeMap.put(3.064996018406718, 0.9922);
-    flightTimeMap.put(3.5764151871506438, 1.058);
-
-    this.spindexer = spindexer;
-    spindexer.setShooting(false);
+    isShooting = false;
 
     this.photonVision = photonVision;
 
@@ -339,11 +339,13 @@ public class Shooter extends SubsystemBase {
    * @param speed The speed to set the feeder to.
    * @param pose The pose of the turret.
    */
-  public void shootWithDistance(double speed, Pose2d pose) {
-    topShooterPID.setSetpoint(getTopTargetVelocity(photonVision.getDistanceToHub(pose)), ControlType.kVelocity);
-    bottomShooterPID.setSetpoint(getBottomTargetVelocity(photonVision.getDistanceToHub(pose)), ControlType.kVelocity);
-    feed(speed);
-    spindexer.setShooting(true);
+  public Command shootWithDistance(double speed, Pose2d pose) {
+    return Commands.parallel(
+      run(() -> topShooterPID.setSetpoint(getTopTargetVelocity(photonVision.getDistanceToHub(pose)), ControlType.kVelocity)),
+      run(() -> bottomShooterPID.setSetpoint(getBottomTargetVelocity(photonVision.getDistanceToHub(pose)), ControlType.kVelocity)),
+      run(() -> feed(speed)),
+      new WaitCommand(1).andThen(() -> spinSpindexer())
+    );
   }
 
   /**Sets the target velocity of both shooter motors to the given velocity.
@@ -353,11 +355,13 @@ public class Shooter extends SubsystemBase {
    * @param bottomShooterSpeed The velocity (in m/s) to set the bottom shooter motor to.
    * @param feederSpeed The velocity (in m/s) to set the feeder to.
    */
-  public void shootWithSpeed(double topShooterSpeed, double bottomShooterSpeed, double feederSpeed) {
-    topShooterPID.setSetpoint(topShooterSpeed, ControlType.kVelocity);
-    bottomShooterPID.setSetpoint(bottomShooterSpeed, ControlType.kVelocity);
-    feed(feederSpeed);
-    spindexer.setShooting(true);
+  public Command shootWithSpeed(double topShooterSpeed, double bottomShooterSpeed, double feederSpeed) {
+    return Commands.parallel(
+      run(() -> topShooterPID.setSetpoint(topShooterSpeed, ControlType.kVelocity)),
+      run(() -> bottomShooterPID.setSetpoint(bottomShooterSpeed, ControlType.kVelocity)),
+      run(() -> feed(feederSpeed)),
+      new WaitCommand(1).andThen(() -> spinSpindexer())
+    );
   }
 
   /**Sets both shooter motors to the given speed.
@@ -368,11 +372,13 @@ public class Shooter extends SubsystemBase {
    * @param bottomShooterSpeed The speed to set the bottom shooter motor to.
    * @param feederSpeed The speed to set the feeder to.
    */
-  public void shootWithoutPID(double topShooterSpeed, double bottomShooterSpeed, double feederSpeed) {
-    topShooterMotor.set(topShooterSpeed);
-    bottomShooterMotor.set(bottomShooterSpeed);
-    feed(feederSpeed);
-    spindexer.setShooting(true);
+  public Command shootWithoutPID(double topShooterSpeed, double bottomShooterSpeed, double feederSpeed) {
+    return Commands.parallel(
+      run(() -> topShooterMotor.set(topShooterSpeed)),
+      run(() -> bottomShooterMotor.set(bottomShooterSpeed)),
+      run(() -> feed(feederSpeed)),
+      new WaitCommand(1).andThen(() -> spinSpindexer())
+    );
   }
 
   /**Sets the feeder to the given speed.
@@ -389,7 +395,7 @@ public class Shooter extends SubsystemBase {
   public void stopShooter() {
     topShooterMotor.stopMotor();
     bottomShooterMotor.stopMotor();
-    spindexer.setShooting(false);
+    spindexerMotor.stopMotor();
   }
 
   /**Stops the feeder motors.
@@ -405,6 +411,23 @@ public class Shooter extends SubsystemBase {
   public void stopShooterAndFeeder() {
     stopShooter();
     stopFeeder();
+  }
+
+  /** Spins the spindexer if the shooter is running.*/
+  public void spinSpindexer(){
+    if(isShooting) {
+      spindexerMotor.set(0.6);
+    }
+    else{
+      spindexerMotor.set(0);
+    }
+  }
+
+  /**Spins the spindexer at a set speed.
+   * @param speed The speed to spin the spindexer at.
+   */
+  public void SpindexerWithSpeed(double speed) {
+    spindexerMotor.set(speed);
   }
 
   //Putting shooter data onto Elastic

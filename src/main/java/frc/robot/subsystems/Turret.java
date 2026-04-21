@@ -114,11 +114,9 @@ public class Turret extends SubsystemBase {
 
     double xDisplacement = swerve.getChassisSpeeds().vxMetersPerSecond * shooter.getFlightTime(vision.getDistanceToHub(currentPose));
     double yDisplacement = swerve.getChassisSpeeds().vyMetersPerSecond * shooter.getFlightTime(vision.getDistanceToHub(currentPose));
-    // double rotationDisplacement = swerve.getChassisSpeeds().omegaRadiansPerSecond * shooter.getFlightTime(vision.getDistanceToHub(currentPose));
 
     double displacedX = currentPose.getX() + xDisplacement;
     double displacedY = currentPose.getY() + yDisplacement;
-    // double displacedRotation = currentPose.getRotation().getRadians() + rotationDisplacement;
 
     Pose2d nextRobotPose = new Pose2d(displacedX, displacedY, new Rotation2d(currentPose.getRotation().getRadians()));
     Pose2d nextTurretPose = nextRobotPose.plus(TURRET_OFFSET);
@@ -169,6 +167,5 @@ public class Turret extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    // vision.setTurretPose2d(getTurretX(), getTurretY(), turretEncoder.getPosition());
   }
 }

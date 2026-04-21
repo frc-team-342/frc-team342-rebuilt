@@ -11,7 +11,6 @@ import frc.robot.commands.DriveWithJoystick;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.PhotonVision;
-import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Intake;
@@ -41,7 +40,6 @@ public class RobotContainer {
   private final Turret turret;
   private final PhotonVision photonVision;
   private final Intake intake;
-  private final Spindexer spindexer;
   private final Shooter shooter;
 
   private final CustomXboxController driver;
@@ -82,8 +80,7 @@ public class RobotContainer {
     photonVision = new PhotonVision();
     swere = new SwerveDrive(photonVision);
     intake = new Intake();
-    spindexer = new Spindexer();
-    shooter = new Shooter(spindexer, photonVision);
+    shooter = new Shooter(photonVision);
     turret = new Turret(swere, photonVision, shooter);
 
     driver = new CustomXboxController(0);
@@ -99,7 +96,7 @@ public class RobotContainer {
     intakeFuel = Commands.runEnd(() -> {intake.spinIntake(-0.95);}, () -> intake.stopIntake());
     downtake = Commands.parallel(
       Commands.runEnd(() -> shooter.feed(-0.9), () -> shooter.feed(0), shooter),
-      Commands.runEnd(() -> spindexer.SpindexerWithSpeed(-0.65), () -> spindexer.SpindexerWithSpeed(0), spindexer)
+      Commands.runEnd(() -> shooter.SpindexerWithSpeed(-0.65), () -> shooter.SpindexerWithSpeed(0))
     );
     shootWhileMoving = Commands.runEnd(() -> shooter.shootWithDistance(1, turret.getLookAheadPoses()[1]), () -> shooter.stopShooterAndFeeder(), shooter);
 
@@ -147,12 +144,10 @@ public class RobotContainer {
     
     swere.setDefaultCommand(driveWithJoystick);
     turret.setDefaultCommand(Commands.run(() -> turret.trackLookAheadPose(photonVision.getHubCenterPose2d()), turret));
-    spindexer.setDefaultCommand(spindexer.runSpindexer());
 
     SmartDashboard.putData(swere);
     SmartDashboard.putData(turret);
     SmartDashboard.putData(photonVision);
-    SmartDashboard.putData(spindexer);
     SmartDashboard.putData(shooter);
     SmartDashboard.putData(intake);
     SmartDashboard.putData(autoChooser);
@@ -183,6 +178,7 @@ public class RobotContainer {
     toggleDriveAssistButton.onTrue(toggleDriveAssist); // 'B' button
     toggleWristButton.onTrue(toggleWristManual); // 'Left Joystick' button
     shootButton.whileTrue(shootWhileMoving);
+    shootButton.onFalse(Commands.run(() -> shooter.stopShooterAndFeeder()));
     leftSideTurretTurnButton.onTrue(Commands.run(() -> turret.turnTurret(-90), turret));
     rightSideTurretTurnButton.onTrue(Commands.run(() -> turret.turnTurret(90), turret));
     straightAheadTurretButton.onTrue(Commands.run(() -> turret.turnTurret(0), turret));
