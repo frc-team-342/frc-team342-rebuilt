@@ -126,7 +126,7 @@ public class Shooter extends SubsystemBase {
     bottomShooterMap = new InterpolatingDoubleTreeMap();
     flightTimeMap = new InterpolatingDoubleTreeMap();
 
-    put(1.5795869380667578, 8.265 - 0.25, 8.735 - 0.25);
+    put(1.5795869380667578, 8.265 - 0.45, 8.735 - 0.45);
     put(1.9252849702151729, 8.365 - 0.025, 8.835 - 0.025);
     // put(2.0, 8.77760987417, 9.30958623014);
     put(2.159714161664487, 8.79 - 0.425, 9.26 - 0.425);
