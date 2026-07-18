@@ -65,7 +65,7 @@ public class SwerveModule {
 
         rotateConfig
             .smartCurrentLimit(60)
-            .idleMode(IdleMode.kBrake)
+            .idleMode(IdleMode.kCoast)
             .inverted(invertRotate);
 
         /** Get the encoders from the respective motors */
@@ -119,21 +119,22 @@ public class SwerveModule {
         rotateAbsoluteEncoderConfig = new CANcoderConfiguration();
 
         switch(CANCoderPort) {
-         case DriveConstants.FRONT_LEFT_CANCODER_ID -> rotateAbsoluteEncoderConfig.MagnetSensor.MagnetOffset = DriveConstants.FL_OFFSET;
-					case DriveConstants.FRONT_RIGHT_CANCODER_ID -> rotateAbsoluteEncoderConfig.MagnetSensor.MagnetOffset = DriveConstants.FR_OFFSET;
-					case DriveConstants.BACK_LEFT_CANCODER_ID -> rotateAbsoluteEncoderConfig.MagnetSensor.MagnetOffset = DriveConstants.BL_OFFSET;
-					case DriveConstants.BACK_RIGHT_CANCODER_ID -> rotateAbsoluteEncoderConfig.MagnetSensor.MagnetOffset = DriveConstants.BR_OFFSET;
+            case DriveConstants.FRONT_LEFT_CANCODER_ID -> rotateAbsoluteEncoderConfig.MagnetSensor.MagnetOffset = DriveConstants.FL_OFFSET;
+			case DriveConstants.FRONT_RIGHT_CANCODER_ID -> rotateAbsoluteEncoderConfig.MagnetSensor.MagnetOffset = DriveConstants.FR_OFFSET;
+			case DriveConstants.BACK_LEFT_CANCODER_ID -> rotateAbsoluteEncoderConfig.MagnetSensor.MagnetOffset = DriveConstants.BL_OFFSET;
+            case DriveConstants.BACK_RIGHT_CANCODER_ID -> rotateAbsoluteEncoderConfig.MagnetSensor.MagnetOffset = DriveConstants.BR_OFFSET;
         }
 
         rotateAbsoluteEncoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
-				rotateAbsoluteEncoderConfig.MagnetSensor.withAbsoluteSensorDiscontinuityPoint(0.5);
+		rotateAbsoluteEncoderConfig.MagnetSensor.withAbsoluteSensorDiscontinuityPoint(0.5);
 
-				rotateAbsoluteEncoder.getConfigurator().apply(rotateAbsoluteEncoderConfig);
+		rotateAbsoluteEncoder.getConfigurator().apply(rotateAbsoluteEncoderConfig);
 
         swerveModuleState = new SwerveModuleState();
+        rotateController.setIAccum(0);
 
-        syncEncoders();
-        initSwerveState();
+        // syncEncoders();
+        // initSwerveState();
     }
 
     public void runCharacterization(double output) {
@@ -192,14 +193,15 @@ public class SwerveModule {
         rotateEncoder.setPosition(absoluteRotatePosition());
     }
 
-    /* Uses the analog encoder to return the an angle within range */
+    /* Uses the analog encoder to return the an angle within range in radians */
     public double absoluteRotatePosition() {
 
-        double angle = rotateAbsoluteEncoder.getPosition().getValueAsDouble();
-        if (angle > Math.PI) {
-            angle = angle - (2 * Math.PI);
-        }
-         return angle;
+        double angle = rotateAbsoluteEncoder.getAbsolutePosition().getValueAsDouble();
+        // if (angle > Math.PI) {
+        //     angle = angle - (2 * Math.PI);
+        // }
+
+        return angle * 2 * Math.PI;
 
 				// return (rotateAbsoluteEncoder.getAbsolutePosition().getValueAsDouble()) * (2 * Math.PI);
     }
