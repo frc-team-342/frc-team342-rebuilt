@@ -25,19 +25,37 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/*
+ * A lot of the methods in this class return an Optional form of a value. This is because
+ * certain values (e.g., poses) do not get assigned a value at startup. This causes an error
+ * to be thrown when null is returned. Optional prevents this by returning false when
+ * a value is null rather than attempting to return null itself.
+ */
+
 /** Add your docs here. */
 public class Camera {
-    private PhotonCamera camera;
-    private PhotonPoseEstimator poseEstimator;
-    private List<PhotonTrackedTarget> tags;
-    private List<PhotonPipelineResult> cameraResults;
-    private Pose3d pose;
-    private PhotonTrackedTarget trackedHubTag;
-    private boolean currentlyTrackingHub;
-    private double timestamp;
-    private Matrix<N3, N3> cameraIntrinsics;
-    private Matrix<N8, N1> distortionCoefficients;
-    private Matrix<N3, N1> visionStandardDeviations;
+    private PhotonCamera camera; //A PhotonCamera
+    private PhotonPoseEstimator poseEstimator; //A PhotonPoseEstimator
+    private List<PhotonTrackedTarget> tags; //A list of all tags seen
+    private List<PhotonPipelineResult> cameraResults; //A list of all camera results
+    private Pose3d pose; //The pose from the estimator
+    private PhotonTrackedTarget trackedHubTag; //The alliance hub tag that is currently seen
+    private boolean currentlyTrackingHub; //Whether an alliance hub tag is seen or not
+    private double timestamp; //The timestamp at which the pose was estimated. This allows for latency compensation
+    /*
+     * Camera intrinsics and distortion coefficients allow for the use of estimateConstrainedSolvepnpPose.
+     * The estimateConstrainedSolvepnpPose method calculates a Pose3d by using a
+     * 2d image of an april tag, camera intrinsics, and distortion coefficients. If done correctly,
+     * it gives more accurate and reliable poses than estimateCoprocMultiTagPose and estimateLowestAmbiguityPose.
+     */
+    // private Matrix<N3, N3> cameraIntrinsics; //The camera intrinsics pulled from the PhotonVision Client
+    // private Matrix<N8, N1> distortionCoefficients; //The distortion coefficients pulled from the PhotonVision Client
+    /*
+     * Vision standard deviations can be used to determine the reliability of vision readings. This
+     * allows SwerveDrivePoseEstimator to determine whether to prioritize odometry readings or
+     * vision readings when estimating a pose.
+     */
+    // private Matrix<N3, N1> visionStandardDeviations; //The calculated vision standard deviations
 
     /**
      * Creates a new Camera.
@@ -55,96 +73,121 @@ public class Camera {
         currentlyTrackingHub = false;
 
         timestamp = 0.0;
-        visionStandardDeviations = VecBuilder.fill(0.5, 0.5, Double.MAX_VALUE);
+        /*
+         * The first number is for the x value, the second for the y value, and the third for the heading.
+         * Set the default trust in the x and y to 0.5. Heading values from the gyro will almost
+         * always be more reliable than heading values from vision, so default the trust in
+         * heading to the max double value.
+         */
+        // visionStandardDeviations = VecBuilder.fill(0.5, 0.5, Double.MAX_VALUE);
     }
 
     /**Updates the pose3d of the robot.
      * If present, a multi-tag pose is used;
      * otherwise, the lowest ambiguity pose is used.
      */
-    public void updateRobotPose(Rotation3d heading) {
+    public void updateRobotPose(/*Rotation3d heading*/) {
         cameraResults = camera.getAllUnreadResults();
 
+        /*
+         * Since getAllUnreadResults returns a list of pipelines, we want to go through all of them.
+         * To do this, we can used an enhanced for loop (or a for-each loop, whichever name you prefer).
+         */
         for(PhotonPipelineResult result : cameraResults) {
+            /*
+             * estimateCoprocMultiTagPose gives more accurate pose estimations than estimateLowestAmbiguityPose,
+             * so we want to try getting a multi-tag pose first.
+             */
             Optional<EstimatedRobotPose> estimatedPose = poseEstimator.estimateCoprocMultiTagPose(result);
 
+            //If we can't get a multi-tag pose, then we fall back on estimateLowestAmbiguityPose.
             if(!estimatedPose.isPresent()) {
                 estimatedPose = poseEstimator.estimateLowestAmbiguityPose(result);
-
+                //If we can't get a lowest ambiguity pose, then we go to the next iteration of the loop.
                 if(!estimatedPose.isPresent()) {
                     continue;
                 }
 
-                timestamp = estimatedPose.get().timestampSeconds;
-                pose = estimatedPose.get().estimatedPose;
-                visionStandardDeviations = calculateVisionStandardDeviations(pose, getTagsSeen());
+                /*
+                 * estimateConstrainedSolvepnpPose should only be used if you have a multi-tag pose.
+                 * So, if we only have a lowest ambiguity pose, we want to pull the pose from that
+                 * estimation then continue to the next iteration of the loop.
+                 */
+                // timestamp = estimatedPose.get().timestampSeconds;
+                // pose = estimatedPose.get().estimatedPose;
+                // visionStandardDeviations = calculateVisionStandardDeviations(pose, getTagsSeen());
+                // continue;
             }
 
-            poseEstimator.addHeadingData(estimatedPose.get().timestampSeconds, heading);
+            /*
+             * If using estimateConstrainedSolvepnpPose, addHeadingData has to be called every loop
+             * before a constrained pnp pose can be estimated.
+             */
+            // poseEstimator.addHeadingData(estimatedPose.get().timestampSeconds, heading);
 
-            Optional<EstimatedRobotPose> constrainedPose = poseEstimator.estimateConstrainedSolvepnpPose(result, cameraIntrinsics, distortionCoefficients, estimatedPose.get().estimatedPose, true, 0);
+            // Optional<EstimatedRobotPose> constrainedPose = poseEstimator.estimateConstrainedSolvepnpPose(result, cameraIntrinsics, distortionCoefficients, estimatedPose.get().estimatedPose, true, 0);
 
-            if(!constrainedPose.isPresent()) {
-                continue;
-            }
+            //If the constrained pnp pose cannot be estimated, use the multi-tag pose instead.
+            // if(!constrainedPose.isPresent()) {
+            //     timestamp = estimatedPose.get().timestampSeconds;
+            //     pose = estimatedPose.get().estimatedPose;
+            //     visionStandardDeviations = calculateVisionStandardDeviations(pose, getTagsSeen());
+            //     continue;
+            // }
 
-            timestamp = constrainedPose.get().timestampSeconds;
-            pose = constrainedPose.get().estimatedPose;
-            visionStandardDeviations = calculateVisionStandardDeviations(pose, getTagsSeen());
+            //Pull the timestamp and pose from the constrained pnp pose estimation
+            // timestamp = constrainedPose.get().timestampSeconds;
+            // pose = constrainedPose.get().estimatedPose;
+            // visionStandardDeviations = calculateVisionStandardDeviations(pose, getTagsSeen());
 
+            /*
+             * If not using estimateConstrainedSolvepnpPose, simply pull the timestamp and pose
+             * from the pose that is present.
+             */
             timestamp = estimatedPose.get().timestampSeconds;
             pose = estimatedPose.get().estimatedPose;
         }
     }
 
-    // /**Adds heading data to the pose estimator.
+    // /**Sets the camera intrinsics matrix.
     //  * 
-    //  * @param timestamp The timestamp (in seconds) at which this method was called.
-    //  * @param heading The heading of the robot.
+    //  * @param cameraIntrinsics The camera intrinsics matrix to use.
     //  */
-    // public void addHeadingData(double timestamp, Rotation3d heading) {
-    //     poseEstimator.addHeadingData(timestamp, heading);
+    // public void setCameraIntrinsics(Matrix<N3, N3> cameraIntrinsics) {
+    //     this.cameraIntrinsics = cameraIntrinsics;
     // }
 
-    /**Sets the camera intrinsics matrix.
-     * 
-     * @param cameraIntrinsics The camera intrinsics matrix to use.
-     */
-    public void setCameraIntrinsics(Matrix<N3, N3> cameraIntrinsics) {
-        this.cameraIntrinsics = cameraIntrinsics;
-    }
+    // /**Sets the distortion coefficients matrix.
+    //  * 
+    //  * @param distortionCoefficients The distortion coefficients matrix to use.
+    //  */
+    // public void setDistortionCoefficients(Matrix<N8, N1> distortionCoefficients) {
+    //     this.distortionCoefficients = distortionCoefficients;
+    // }
 
-    /**Sets the distortion coefficients matrix.
-     * 
-     * @param distortionCoefficients The distortion coefficients matrix to use.
-     */
-    public void setDistortionCoefficients(Matrix<N8, N1> distortionCoefficients) {
-        this.distortionCoefficients = distortionCoefficients;
-    }
+    // /**Gets the camera intrinsics matrix of the camera.
+    //  * 
+    //  * @return The camera intrinsics.
+    //  */
+    // public Optional<Matrix<N3, N3>> getCameraIntrinsics() {
+    //     return camera.getCameraMatrix();
+    // }
 
-    /**Gets the camera intrinsics matrix of the camera.
-     * 
-     * @return The camera intrinsics.
-     */
-    public Optional<Matrix<N3, N3>> getCameraIntrinsics() {
-        return camera.getCameraMatrix();
-    }
+    // /**Gets the distortion coefficients matrix of the camera.
+    //  * 
+    //  * @return The distortion coefficients.
+    //  */
+    // public Optional<Matrix<N8, N1>> getDistortionCoefficients() {
+    //     return camera.getDistCoeffs();
+    // }
 
-    /**Gets the distortion coefficients matrix of the camera.
-     * 
-     * @return The distortion coefficients.
-     */
-    public Optional<Matrix<N8, N1>> getDistortionCoefficients() {
-        return camera.getDistCoeffs();
-    }
-
-    /**Gets the standard deviations of the vision measurements.
-     * 
-     * @return A matrix containing the standard deviations of the vision measurements.
-     */
-    public Matrix<N3, N1> getVisionStandardDeviations() {
-        return visionStandardDeviations;
-    }
+    // /**Gets the standard deviations of the vision measurements.
+    //  * 
+    //  * @return A matrix containing the standard deviations of the vision measurements.
+    //  */
+    // public Matrix<N3, N1> getVisionStandardDeviations() {
+    //     return visionStandardDeviations;
+    // }
 
     /**Calculates the standard deviations of the vision measurements.
      * 
@@ -156,36 +199,51 @@ public class Camera {
         int numTags = 0;
         double avgDistance = 0.0;
 
+        //Since we have a list of tags, use an enhanced for loop
         for(PhotonTrackedTarget tag : tags) {
+            //Get the pose of the tag
             Optional<Pose3d> tagPose = poseEstimator.getFieldTags().getTagPose(tag.getFiducialId());
 
+            //If the pose cannot be obtained, go to the next iteration of the loop
             if(tagPose.isEmpty()) {
                 continue;
             }
 
-            numTags++;
+            numTags++; //Add one to the number of tags checked
+            //Add the distance from the robot to the tag
             avgDistance += tagPose.get().toPose2d()
                 .getTranslation()
                 .getDistance(pose.toPose2d().getTranslation());
         }
 
+        /*
+         * If no tags were able to be checked, fill the vision standard deviations with
+         * the max double value. This will tell the robot that the vision readings are
+         * extremely unreliable and should not be used.
+         */
         if(numTags == 0) {
             return VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
         }
 
+        //Find the average distance of the tags
         avgDistance /= numTags;
         double standardDeviation;
 
+        //If there is only one tag and it is over 4 meters, do not trust the estimated pose
         if(numTags == 1 && avgDistance >= 4.0) {
             standardDeviation = Double.MAX_VALUE;
+        //If there are multiple tags and it is over 4 meters, scale it by distance
         }else if(numTags >= 2 && avgDistance >= 4.0) {
             standardDeviation = 0.2 * (avgDistance * avgDistance);
+        //If there are multiple tags and it is less than 4 meters, set it to 0.2
         }else if(numTags >= 2 && avgDistance < 4.0) {
             standardDeviation = 0.2;
+        //If there is one tag and it is less than 4 meters, scale it by distance
         }else{
             standardDeviation = 0.5 + (0.3 * (avgDistance * avgDistance));
         }
 
+        //Return a matrix with the calculated values
         return VecBuilder.fill(standardDeviation, standardDeviation, Double.MAX_VALUE);
     }
 
@@ -336,12 +394,15 @@ public class Camera {
                 if(tagIsUsable(tag)) {
                     for(hubTagsIDs tagID : hubTagsIDs.values()) {
                         for(int i = 0; i < hubTagsIDs.values().length; i++) {
+                            //This checks if the current alliance is red or blue
                             if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
+                                //If red, it tries to match the tag IDs with the red tag IDs
                                 if(tag.getFiducialId() == tagID.getRedHubTagID()) {
                                     trackedHubTag = tag;
                                     return true;
                                 }
                             }else{
+                                //If blue, it tries to match the tag IDs with the blue tag IDs
                                 if(tag.getFiducialId() == tagID.getBlueHubTagID()) {
                                     trackedHubTag = tag;
                                     return true;
@@ -366,11 +427,14 @@ public class Camera {
                 if(tagIsUsable(tag)) {
                     for(outpostTagsIDs tagID : outpostTagsIDs.values()) {
                         for(int i = 0; i < outpostTagsIDs.values().length; i++) {
+                            //This checks if the current alliance is red or blue
                             if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
+                                //If red, it tries to match the tag IDs with the red tag IDs
                                 if(tag.getFiducialId() == tagID.getRedOutpostTagID()) {
                                     return true;
                                 }
                             }else{
+                                //If blue, it tries to match the tag IDs with the blue tag IDs
                                 if(tag.getFiducialId() == tagID.getBlueOutpostTagID()) {
                                     return true;
                                 }
@@ -394,11 +458,14 @@ public class Camera {
                 if(tagIsUsable(tag)) {
                     for(towerTagsIDs tagID : towerTagsIDs.values()) {
                         for(int i = 0; i < towerTagsIDs.values().length; i++) {
+                            //This checks if the current alliance is red or blue
                             if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
+                                //If red, it tries to match the tag IDs with the red tag IDs
                                 if(tag.getFiducialId() == tagID.getRedTowerTagID()) {
                                     return true;
                                 }
                             }else{
+                                //If blue, it tries to match the tag IDs with the blue tag IDs
                                 if(tag.getFiducialId() == tagID.getBlueTowerTagID()) {
                                     return true;
                                 }
@@ -430,14 +497,17 @@ public class Camera {
      * @return {@code true} if the tag is centered, {@code false} otherwise.
      */
     public boolean trackedHubTagIsCentered() {
+        //This checks if the current alliance is red or blue
         if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
             for(centerHubTagsIDs tagID : centerHubTagsIDs.values()) {
+                //If red, it tries to match the tag IDs with the red tag IDs
                 if(trackedHubTag.getFiducialId() == tagID.getCenterRedHubTagID()) {
                     return true;
                 }
             }
         }else{
             for(centerHubTagsIDs tagID : centerHubTagsIDs.values()) {
+                //If blue, it tries to match the tag IDs with the blue tag IDs
                 if(trackedHubTag.getFiducialId() == tagID.getCenterBlueHubTagID()) {
                     return true;
                 }
@@ -463,13 +533,5 @@ public class Camera {
      */
     public Optional<PhotonTrackedTarget> getTrackedHubTag() {
         return Optional.of(trackedHubTag);
-    }
-
-    /**Gets the yaw from the robot to the hub.
-     * 
-     * @return The yaw (in degrees) from the robot to the hub.
-     */
-    public Optional<Double> getYawToHub() {
-        return Optional.of(getRobotToTagYaw(getTrackedHubTag().get()).get());
     }
 }

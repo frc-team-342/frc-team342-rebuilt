@@ -34,6 +34,12 @@ public class Intake extends SubsystemBase {
   private TalonFXConfiguration intakeConfig;
   private SparkFlexConfig wristConfig;
 
+  /*
+   * This boolean is used to determine whether the wrist is using preset positions
+   * or if the operator is able to manually control the wrist. Because the PID controller
+   * requires control of the subsystem to hold the wrist in position, a toggle is required to
+   * allow both the PID and manual operator control to function.
+   */
   private boolean isManual;
   /** Creates a new Intake. */
   public Intake() {
@@ -42,7 +48,7 @@ public class Intake extends SubsystemBase {
 
     wristEncoder = wristMotor.getEncoder();
 
-    isManual = false;
+    isManual = false; //We want to start with using preset positions. Manual control is a backup.
 
     wristPID = wristMotor.getClosedLoopController();
 
@@ -103,11 +109,22 @@ public class Intake extends SubsystemBase {
    * @param setpoint The position to move to.
    */
   public void wristToPosition(double setpoint, XboxController controller) {
+    /*
+     * This statement checks to see if the isManual boolean is true. If it is false, it will continue
+     * with preset positions. If it is true, it will use the wristWithJoystick method instead,
+     * allowing for manual control of the wrist.
+     */
     if(!isManual){
+      /*
+       * If the setpoint is lower than current wrist position (the encoder reading increases
+       * as the wrist goes lower, hence why > instead of <), then use the weaker PID values.
+       */
       if(setpoint > getWristPosition()) {
         wristPID.setSetpoint(setpoint, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+      //If the setpoint is higher than the current wrist position, then use the stronger PID values.
       }else if(setpoint < getWristPosition()) {
         wristPID.setSetpoint(setpoint, ControlType.kPosition, ClosedLoopSlot.kSlot1);
+        //Not sure why this statement is here, but the wrist seems to work fine, so I'm not going to touch it.
         if(wristPID.isAtSetpoint()) {
           resetWristEncoder();
         }
@@ -123,6 +140,12 @@ public class Intake extends SubsystemBase {
    * @param controller The controller to pull values from.
    */
   public void wristWithJoystick(XboxController controller){
+    /*
+     * The value from the joystick is divided by 5 to prevent the wrist from moving too fast
+     * when being manually controlled. Slower movement also allows the operator to make more
+     * precise movements. However, it is always most important to test the speed and ask the
+     * operator for their preference.
+     */
     moveWrist(controller.getLeftY()/5);
   }
 
@@ -197,7 +220,8 @@ public class Intake extends SubsystemBase {
     return isManual;
   }
 
-  /**Checks to see if the wrist is at the desired position.
+  /**Checks to see if the wrist is at the desired position. If the encoder reading is within
+   * 0.2 of the desired position, then the wrist is considered to have reached the setpoint.
    * 
    * @param position The desired position.
    * @return {@code true} if the wrist is at the desired position, {@code false} otherwise.
@@ -207,6 +231,7 @@ public class Intake extends SubsystemBase {
   }
 
   //Putting intake and wrist data onto Elastic
+  //Putting data onto Elastic helps with debugging
   public void initSendable(SendableBuilder builder) {
     super.initSendable(builder);
 

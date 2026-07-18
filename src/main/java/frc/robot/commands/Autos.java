@@ -50,15 +50,6 @@ public final class Autos {
     return shooter.runBottombottomShooterSysID();
   }
 
-  /**Runs the SysIdRoutine of the turret motor.
-   * 
-   * @param turret The turret subsystem.
-   * @return A command that runs the turret SysIdRoutine.
-   */
-  public static Command turretSysID(Turret turret) {
-    return turret.runTurretSysId();
-  }
-
   /**Runs the SysIdRoutine for the SwerveDrive subsystem.
    * 
    * @param swerve The swerve subsystem.

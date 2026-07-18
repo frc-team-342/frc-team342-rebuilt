@@ -457,6 +457,8 @@ public class Shooter extends SubsystemBase {
     builder.addDoubleProperty("Bottom Shooter Position", () -> getBottomShooterPosition(), null);
     builder.addDoubleProperty("Interpolated Top Shooter Velocity", () -> getTopTargetVelocity(photonVision.getDistanceToHub(photonVision.getTurretPose2d().get())), null);
     builder.addDoubleProperty("Interpolated Bottom Shooter Velocity", () -> getBottomTargetVelocity(photonVision.getDistanceToHub(photonVision.getTurretPose2d().get())), null);
+    builder.addDoubleProperty("Regression Top Shooter Velocity", () -> getTopRegressionVelocity(photonVision.getDistanceToHub(photonVision.getTurretPose2d().get())), null);
+    builder.addDoubleProperty("Regression Bottom Shooter Velocity", () -> getBottomRegressionVelocity(photonVision.getDistanceToHub(photonVision.getTurretPose2d().get())), null);
     builder.addBooleanProperty("Able to Shoot", () -> photonVision.tagIsPresentAcrossAllCameras(), null);
   }
 

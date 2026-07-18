@@ -4,9 +4,6 @@
 
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Second;
-import static edu.wpi.first.units.Units.Seconds;
-import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.Constants.TurretConstants.*;
 
 import com.revrobotics.PersistMode;
@@ -22,15 +19,7 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.TurretConstants;
 
@@ -40,16 +29,11 @@ public class Turret extends SubsystemBase {
   private RelativeEncoder turretEncoder;
   private SparkClosedLoopController turretController;
 
-  private ProfiledPIDController turretPID;
-  private SimpleMotorFeedforward turretFF;
-
   private SwerveDrive swerve;
 	private PhotonVision vision;
   private Shooter shooter;
 
   private double goal;
-  
-  private SysIdRoutine turretSysIdRoutine;
 
   /** Creates a new Turret. */
   public Turret(SwerveDrive swerve, PhotonVision vision, Shooter shooter) {
@@ -61,19 +45,6 @@ public class Turret extends SubsystemBase {
     turretConfig = new SparkFlexConfig();
     turretEncoder = turretMotor.getEncoder();
     turretController = turretMotor.getClosedLoopController();
-
-    turretPID = new ProfiledPIDController(
-      TURRET_PID_VALUES_SLOT1[0],
-      TURRET_PID_VALUES_SLOT1[1],
-      TURRET_PID_VALUES_SLOT1[2],
-      TURRET_CONSTRAINTS
-    );
-
-    turretFF = new SimpleMotorFeedforward(
-      TURRET_SVA_VALUES[0],
-      TURRET_SVA_VALUES[1],
-      TURRET_SVA_VALUES[2]
-    );
 
     turretConfig
       .smartCurrentLimit(60)
@@ -96,15 +67,6 @@ public class Turret extends SubsystemBase {
 
     turretMotor.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     goal = 0.0;
-
-    turretSysIdRoutine = new SysIdRoutine(
-      new Config(
-        Volts.of(0.1).per(Second),
-        Volts.of(0.5),
-        Seconds.of(30)
-      ),
-      new Mechanism((volts) -> turretMotor.setVoltage(volts.in(Volts)), null, this)
-    );
   }
 
   /**Tells the turret to rotate to the angle to the pose from a lookahead pose.
@@ -115,21 +77,13 @@ public class Turret extends SubsystemBase {
 		double safeGoal = MathUtil.clamp(angleToLookAheadPose(pose), TURRET_MIN_ANGLE, TURRET_MAX_ANGLE);
     goal = safeGoal;
 
-		// if(turretEncoder.getPosition() < -40) {
-		// 	turretController.setSetpoint(goal, ControlType.kPosition, ClosedLoopSlot.kSlot1);
-		// }else if(turretEncoder.getPosition() > goal) {
-    // 	turretController.setSetpoint(goal, ControlType.kPosition, ClosedLoopSlot.kSlot0);
-		// }else{
-		// 	turretController.setSetpoint(goal, ControlType.kPosition, ClosedLoopSlot.kSlot1);
-		// }
-
-    turretPID.setGoal(goal);
-
-    double pidInput = turretPID.calculate(turretEncoder.getPosition());
-    double ffInput = turretFF.calculate(turretPID.getSetpoint().velocity);
-    double voltInput = MathUtil.clamp(pidInput + ffInput, -12, 12);
-
-    turretMotor.setVoltage(voltInput);
+		if(turretEncoder.getPosition() < -40) {
+			turretController.setSetpoint(goal, ControlType.kPosition, ClosedLoopSlot.kSlot1);
+		}else if(turretEncoder.getPosition() > goal) {
+    	turretController.setSetpoint(goal, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+		}else{
+			turretController.setSetpoint(goal, ControlType.kPosition, ClosedLoopSlot.kSlot1);
+		}
   }
 
   /**Turns the turret to a setpoint.
@@ -149,36 +103,6 @@ public class Turret extends SubsystemBase {
   /**Sets the turret motor speed to 0 */
   public void stop(){
     turretMotor.set(0);
-  }
-
-  /**Returns a command that runs the system identification routine for the turret.
-   * 
-   * @return The command that will run the turret system identification routine.
-   */
-  public Command runTurretSysId() {
-    return Commands.sequence(
-      turretSysIdRoutine
-        .quasistatic(Direction.kForward)
-        .until(() -> atDesiredPosition(TURRET_MAX_ANGLE)),
-      turretSysIdRoutine
-        .quasistatic(Direction.kReverse)
-        .until(() -> atDesiredPosition(TURRET_MIN_ANGLE)),
-      turretSysIdRoutine
-        .dynamic(Direction.kForward)
-        .until(() -> atDesiredPosition(TURRET_MAX_ANGLE)),
-      turretSysIdRoutine
-        .dynamic(Direction.kReverse)
-        .until(() -> atDesiredPosition(TURRET_MIN_ANGLE))
-    );
-  }
-
-  /**Checks if the turret is at the desired position.
-   * 
-   * @param position The desired position.
-   * @return Returns {@code true} if at the desired position, returns {@code false} otherwise.
-   */
-  public boolean atDesiredPosition(double position) {
-    return Math.abs(position - turretEncoder.getPosition()) < TURRET_ALLOWED_ERROR;
   }
 
   /**Gets the lookahead poses for the robot and the turret.
@@ -235,9 +159,7 @@ public class Turret extends SubsystemBase {
   /**puts the data for the turret on smartdashboard*/
   public void initSendable(SendableBuilder builder){
     super.initSendable(builder);
-    builder.addDoubleProperty("Turret Encoder Position", () -> turretEncoder.getPosition(), null);
-    builder.addDoubleProperty("Turret Turning Velocity", () -> turretEncoder.getVelocity(), null);
-    builder.addDoubleProperty("Turret Voltage Draw", () -> turretMotor.getAppliedOutput() * turretMotor.getBusVoltage(), null);
+    builder.addDoubleProperty("Turret Position", () -> turretEncoder.getPosition(), null);
     builder.addDoubleProperty("Turret PID Setpoint", () -> turretController.getSetpoint(), null);
     builder.addDoubleProperty("Turret Assumed Goal", () -> this.goal, null);
   }
@@ -245,6 +167,5 @@ public class Turret extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    trackLookAheadPose(vision.getHubCenterPose2d());
   }
 }

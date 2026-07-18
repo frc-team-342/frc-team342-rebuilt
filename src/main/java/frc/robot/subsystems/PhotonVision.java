@@ -76,16 +76,16 @@ public class PhotonVision extends SubsystemBase {
 
     field = new Field2d();
 
-    robotRightCamera.setCameraIntrinsics(robotRightCamera.getCameraIntrinsics().get());
-    robotRightCamera.setDistortionCoefficients(robotRightCamera.getDistortionCoefficients().get());
+    // robotRightCamera.setCameraIntrinsics(robotRightCamera.getCameraIntrinsics().get());
+    // robotRightCamera.setDistortionCoefficients(robotRightCamera.getDistortionCoefficients().get());
 
     // robotLeftCamera.setCameraIntrinsics(robotLeftCamera.getCameraIntrinsics().get());
     // robotLeftCamera.setDistortionCoefficients(robotLeftCamera.getDistortionCoefficients().get());
 
-    robotBackCamera.setCameraIntrinsics(robotBackCamera.getCameraIntrinsics().get());
-    robotBackCamera.setDistortionCoefficients(robotBackCamera.getDistortionCoefficients().get());
+    // robotBackCamera.setCameraIntrinsics(robotBackCamera.getCameraIntrinsics().get());
+    // robotBackCamera.setDistortionCoefficients(robotBackCamera.getDistortionCoefficients().get());
 
-    visionStandardDeviations = VecBuilder.fill(0.5, 0.5, Double.MAX_VALUE);
+    // visionStandardDeviations = VecBuilder.fill(0.5, 0.5, Double.MAX_VALUE);
   }
 
   /**Returns all tags seen by all cameras.
@@ -330,26 +330,24 @@ public class PhotonVision extends SubsystemBase {
   /**Updates the robot pose3d using the best pose from the cameras.
    * Best pose is determined by ambiguity.
    */
-  public void updatePose3d(Rotation3d heading) {
+  public void updatePose3d(/*Rotation3d heading*/) {
     Pose3d bestPose = null;
     double lowestAmbiguity = 10;
 
     for(int i = 0; i < allCameras.length; i++) {
-      allCameras[i].updateRobotPose(heading);
+      allCameras[i].updateRobotPose(/*heading*/);
 
       if(allCameras[i].getRobotPose3d().isPresent()) {
         if(allCameras[i].getPoseAmbiguity().get() != -1 && allCameras[i].getPoseAmbiguity().get() < lowestAmbiguity) {
           bestPose = allCameras[i].getRobotPose3d().get();
           lowestAmbiguity = allCameras[i].getPoseAmbiguity().get();
           timestamp = allCameras[i].getTimestamp();
-          visionStandardDeviations = allCameras[i].getVisionStandardDeviations();
+          // visionStandardDeviations = allCameras[i].getVisionStandardDeviations();
         }
       }
     }
 
-    if(bestPose == null) {
-      
-    }else{
+    if(bestPose != null) {
       pose3d = bestPose;
     }
   }
@@ -448,17 +446,16 @@ public class PhotonVision extends SubsystemBase {
     builder.addDoubleProperty("Center of Hub X", () -> getHubCenterPose2d().getX(), null);
     builder.addDoubleProperty("Center of Hub Y", () -> getHubCenterPose2d().getY(), null);
     builder.addDoubleProperty("Center of Hub Rotation", () -> getHubCenterPose2d().getRotation().getRadians(), null);
-    SmartDashboard.putData(field);
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    // updatePose3d();
-    // updatePose2d();
+    updatePose3d();
+    updatePose2d();
     
-    // getDistanceToHub(getTurretPose2d().get());
+    getDistanceToHub(getTurretPose2d().get());
 
-    // field.setRobotPose(pose2d);
+    field.setRobotPose(pose2d);
   }
 }
