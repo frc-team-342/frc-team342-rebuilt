@@ -9,6 +9,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj.XboxController;
 
+/*
+ * This class is used to create a subclass of XboxController. This is done to allow us to
+ * customize certain buttons and create custom commands. It also allows us to apply deadbands
+ * to the joysticks so we don't need to apply deadbands every time we create an instance
+ * of XboxController.
+ */
 public class CustomXboxController extends XboxController {
 
     /**
@@ -19,6 +25,12 @@ public class CustomXboxController extends XboxController {
         super(port);
     }
 
+    /**Applies a 0.15 deadband. This means that the given value is set to 0.0 if it falls
+     * within 0.0 - 0.15. The remaining values are scaled from 0.0 - 1.0.
+     * 
+     * @param value The value to apply a deadband to.
+     * @return The value after the deadband is applied.
+     */
     public double applyDeadband(double value){
         return MathUtil.applyDeadband(value, 0.15);
     }

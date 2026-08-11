@@ -162,6 +162,11 @@ public class Turret extends SubsystemBase {
     builder.addDoubleProperty("Turret Position", () -> turretEncoder.getPosition(), null);
     builder.addDoubleProperty("Turret PID Setpoint", () -> turretController.getSetpoint(), null);
     builder.addDoubleProperty("Turret Assumed Goal", () -> this.goal, null);
+    builder.addDoubleProperty("Turret Distance to Hub", () -> vision.getDistanceToHub(getLookAheadPoses()[1]), null);
+    builder.addDoubleProperty("Turret Lookahead X", () -> getLookAheadPoses()[1].getX(), null);
+    builder.addDoubleProperty("Turret Lookahead Y", () -> getLookAheadPoses()[1].getY(), null);
+    builder.addDoubleProperty("Interpolated Top Shooter Velocity", () -> shooter.getTopTargetVelocity(vision.getDistanceToHub(getLookAheadPoses()[1])), null);
+    builder.addDoubleProperty("Interpolated Bottom Shooter Velocity", () -> shooter.getBottomTargetVelocity(vision.getDistanceToHub(getLookAheadPoses()[1])), null);
   }
 
   @Override
