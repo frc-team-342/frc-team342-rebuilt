@@ -50,16 +50,35 @@ public final class Autos {
     return shooter.runBottombottomShooterSysID();
   }
 
+  /**Runs the SysIdRoutine for the SwerveDrive subsystem.
+   * 
+   * @param swerve The swerve subsystem.
+   * @return A command that runs the SwerveDrive SysIdRoutine.
+   */
   public static Command swerveSysID(SwerveDrive swerve) {
     return swerve.runSwerveSysID();
   }
 
+  /**Runs a basic center auto that backs up, turns, and shoots into the hub.
+   * 
+   * @param swerve The swerve subsystem.
+   * @param shooter The shooter subsystem.
+   * @param intake The intake subsystem.
+   * @return A command that runs the basic center auto.
+   */
   public static Command basicCenterAuto(SwerveDrive swerve, Shooter shooter, Intake intake){
     return Commands.sequence(
       Commands.runOnce(() -> swerve.setPose(new Pose2d(3.537, 4.0, new Rotation2d(0)))),
       new PathPlannerAuto("Basic Center Auto")
     ); 
   }
+
+  /**Runs a basic left auto that backs up, turns, and shoots into the hub.
+   * 
+   * @param swerve The swerve subsystem.
+   * @param shooter The shooter subsystem.
+   * @return A command that runs the basic left auto.
+   */
   public static Command basicLeftAuto(SwerveDrive swerve, Shooter shooter){
     return Commands.sequence(
       Commands.runOnce(() -> swerve.setPose(new Pose2d(3.537, 5.574, new Rotation2d(0)))),
@@ -67,10 +86,24 @@ public final class Autos {
     );
   }
 
+  /**Runs a basic right auto that backs up, turns, and shoots into the hub.
+   * 
+   * @param swerve The swerve subsystem.
+   * @param shooter The shooter subsystem.
+   * @return A command that runs the basic right auto.
+   */
   public static Command basicRightAuto(SwerveDrive swerve, Shooter shooter){
     return new PathPlannerAuto("Basic Right Auto");
   }
 
+
+  /**Runs a right outpost auto that backs up to the outpost, obtains fuel from the outpost,
+   * then shoots into the hub.
+   * 
+   * @param swerve The swerve subsystem.
+   * @param shooter The shooter subsystem.
+   * @return A command that runs the right outpost auto.
+   */
   public static Command rightOutpostShoot(SwerveDrive swerve, Shooter shooter){
     return Commands.sequence(
       Commands.runOnce(() -> swerve.setPose(new Pose2d(3.537, 0.666, new Rotation2d(0)))),
@@ -78,7 +111,15 @@ public final class Autos {
     );
   }
 
-  public static Command basicRightTurretAuto(SwerveDrive swerve, Shooter shooter, Turret turret, PhotonVision vision, CustomXboxController controller) {
+  /**Runs a basic right auto utilizing the turret. It turns the turret and shoots into the hub.
+   * 
+   * @param swerve The swerve subsystem.
+   * @param shooter The shooter subsystem.
+   * @param turret The turret subsystem.
+   * @param vision The vision subsystem.
+   * @return A command that runs the basic right turret auto.
+   */
+  public static Command basicRightTurretAuto(SwerveDrive swerve, Shooter shooter, Turret turret, PhotonVision vision) {
     return Commands.sequence(
       Commands.runOnce(() -> swerve.setPose(new Pose2d(3.537, 1.791, new Rotation2d(0)))),
       Commands.run(() -> turret.turnTurret(120.11383056640625), turret).withTimeout(1.5),
@@ -87,7 +128,16 @@ public final class Autos {
     );
   }
 
-  public static Command basicLeftTurretAuto(SwerveDrive swerve, Shooter shooter, Turret turret, PhotonVision vision, CustomXboxController controller) {
+  /**Runs a basic left auto utilizing the turret. It backs up, rotates, turns the turret,
+   * then shoots into the hub.
+   * 
+   * @param swerve The swerve subsystem.
+   * @param shooter The shooter subsystem.
+   * @param turret The turret subsystem.
+   * @param vision The vision subsystem.
+   * @return A command that runs the basic left turret auto.
+   */
+  public static Command basicLeftTurretAuto(SwerveDrive swerve, Shooter shooter, Turret turret, PhotonVision vision) {
     return Commands.sequence(
       Commands.runOnce(() -> swerve.setPose(new Pose2d(3.537, 6.209, new Rotation2d(0)))),
       Commands.runEnd(() -> swerve.drive(ChassisSpeeds.fromFieldRelativeSpeeds(new ChassisSpeeds(-1.0, 0, 2 * Math.PI), new Rotation2d(swerve.gyroRad()))), () -> swerve.drive(new ChassisSpeeds(0, 0, 0)), swerve).withTimeout(1),
@@ -95,6 +145,18 @@ public final class Autos {
     );
   }
 
+  /**Runs a right side neutral zone auto. It turns the turret and shoots into the hub and then
+   * backs up before going over the bump. It intakes, then moves back over the bump. It then
+   * turns the robot, turns the turret, and shoots into the hub.
+   * 
+   * @param swerve The swerve subsystem.
+   * @param shooter The shooter subsystem.
+   * @param turret The turret subsystem.
+   * @param vision The vision subsystem.
+   * @param intake The intake subsystem.
+   * @param controller The operator controller.
+   * @return A command that runs the right neutral zone auto.
+   */
   public static Command rightNeutralZoneAuto(SwerveDrive swerve, Shooter shooter, Turret turret, PhotonVision vision, Intake intake, CustomXboxController controller) {
     return Commands.sequence(
       Commands.runOnce(() -> swerve.setPose(new Pose2d(3.568, 2.884, new Rotation2d(0)))),
@@ -121,6 +183,17 @@ public final class Autos {
     );
   }
 
+  /**Runs a depot auto. It backs up, turns 180 degrees, turns the turret, then shoots into the hub.
+   * It then intakes from the depot, drives forward, turns the turret, then shoots into the hub.
+   * 
+   * @param swerve The swerve subsystem.
+   * @param shooter The shooter subsystem.
+   * @param turret The turret subsystem.
+   * @param vision The vision subsystem.
+   * @param intake The intake subsystem.
+   * @param controller The operator controller.
+   * @return A command that runs the depot auto.
+   */
   public static Command depotAuto(SwerveDrive swerve, Shooter shooter, Turret turret, PhotonVision vision, Intake intake, CustomXboxController controller) {
     return Commands.sequence(
       Commands.runOnce(() -> swerve.setPose(FlippingUtil.flipFieldPose(new Pose2d(3.568, 6.050, new Rotation2d(0))))),
@@ -143,6 +216,11 @@ public final class Autos {
     );
   }
 
+  /**Runs a straight line auto in which the robot moves backwards in a straight line.
+   * 
+   * @param swerve The swerve subsystem.
+   * @return A command that runs the straight line auto.
+   */
   public static Command straightLineAuto(SwerveDrive swerve) {
     return new PathPlannerAuto("Straight Line Auto");
   }

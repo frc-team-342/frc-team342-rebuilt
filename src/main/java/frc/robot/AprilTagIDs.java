@@ -6,6 +6,11 @@ package frc.robot;
 
 /** Add your docs here. */
 public class AprilTagIDs {
+    /*
+     * This class is used to hold all tags of interest to us.
+     * This allows us to identify which tags the robot is seeing, which can be used for
+     * certain things (e.g., identifying if our alliance's hub is in sight).
+     */
 
     /**Holds all IDs for the hub.
      * 

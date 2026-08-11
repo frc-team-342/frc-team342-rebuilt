@@ -66,7 +66,6 @@ public class RobotContainer {
   private final Command intakeFuel;
   private final Command getFuelUnstuck;
   private final Command downtake;
-  private final Command shootWhileMoving;
   private final Command toggleWristManual;
 
   private final SendableChooser<Command> autoChooser;
@@ -77,15 +76,29 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    /*
+     * Creating instances of each subsystem. Make sure only one instance of each subsystem is created,
+     * otherwise the code will throw an error. If you need to access one subsystem in another subsystem,
+     * add it as a parameter so you don't create multiple instances of one subsystem.
+     */
     photonVision = new PhotonVision();
     swere = new SwerveDrive(photonVision);
     intake = new Intake();
     shooter = new Shooter(photonVision);
     turret = new Turret(swere, photonVision, shooter);
 
+    /*
+     * Creating two instances of CustomXboxController. Typically, there only need to be two
+     * instances created in RobotContainer: driver and operator.
+     */
     driver = new CustomXboxController(0);
     operator = new CustomXboxController(1);
 
+    /*
+     * Rather than creating commands for everything we want to do, we typically just make methods
+     * inside the subsystems, then use the Commands class combined with lambdas to call those methods
+     * inside of RobotContainer.
+     */
     toggleFieldOriented = Commands.runOnce(() -> {swere.toggleFieldOriented();}, swere);
     toggleDriveAssist = Commands.runOnce(() -> {swere.toggleDriveAssist();}, swere);
     toggleWristManual = Commands.runOnce(() -> intake.toggleManual());
@@ -93,14 +106,17 @@ public class RobotContainer {
     wristUp = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_UP_POSITION, operator), intake);
     wristMiddle = Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_MIDDLE_POSITION, operator), intake);
     getFuelUnstuck = Commands.runEnd(() -> {intake.spinIntake(0.6);}, () -> intake.stopIntake(), intake);
-    intakeFuel = Commands.runEnd(() -> {intake.spinIntake(-0.95);}, () -> intake.stopIntake());
+    intakeFuel = Commands.runEnd(() -> {intake.spinIntake(-1);}, () -> intake.stopIntake());
     downtake = Commands.parallel(
       Commands.runEnd(() -> shooter.feed(-0.9), () -> shooter.feed(0), shooter),
       Commands.runEnd(() -> shooter.SpindexerWithSpeed(-0.65), () -> shooter.SpindexerWithSpeed(0))
     );
-    shootWhileMoving = shooter.shootWithDistance(1, turret.getLookAheadPoses()[1]);
     driveWithJoystick = new DriveWithJoystick(swere, driver);
 
+    /*
+     * Creating the buttons. Make sure that two buttons on the same controller
+     * don't use the same value.
+     */
     fieldOrientedButton = new JoystickButton(driver, XboxController.Button.kA.value);
     toggleDriveAssistButton = new JoystickButton(driver, XboxController.Button.kB.value);
     shootButton = new JoystickButton(operator, XboxController.Button.kRightBumper.value);
@@ -113,8 +129,16 @@ public class RobotContainer {
     wristUpButton = new POVButton(operator, 0);
     wristMiddleButton = new POVButton(operator, 90);
 
+    /*
+     * Creating an SendableChooser for autos. This needs to be done in order to
+     * select autos, so don't forget it.
+     */
     autoChooser = new SendableChooser<>();
 
+    /*
+     * When using PathPlanner, you need to register commands in order to use them in the
+     * PathPlanner app.
+     */
     // NamedCommands.registerCommand("Shoot Command", Commands.run(() -> shooter.shootWithSpeed(5.98473400509, 11.7034798322, 1), shooter));
     NamedCommands.registerCommand("Shoot Command", Commands.runEnd(() -> shooter.shootWithDistance(1, turret.getLookAheadPoses()[1]), () -> shooter.stopShooterAndFeeder(), shooter).withTimeout(5));
     NamedCommands.registerCommand("Wrist Down", Commands.run(() -> intake.wristToPosition(IntakeConstants.WRIST_DOWN_POSITION, operator), intake).withTimeout(0.5));
@@ -125,6 +149,10 @@ public class RobotContainer {
     NamedCommands.registerCommand("Outpost Turret Turn", Commands.run(() -> turret.turnTurret(63), turret).withTimeout(0.75));
     NamedCommands.registerCommand("Right Outpost Start Turret Turn", Commands.run(() -> turret.turnTurret(109.23597635949386), turret).withTimeout(0.75));
 
+    /*
+     * In order to run an auto, you must first add it to the auto chooser, so don't forget
+     * to do this.
+     */
     autoChooser.addOption("Drive SysId Quasistatic Forward", Commands.run(() -> swere.sysIdQuasistatic(SysIdRoutine.Direction.kForward), swere));
     autoChooser.addOption("Drive SysId Quasistatic Reverse", Commands.run(() -> swere.sysIdQuasistatic(SysIdRoutine.Direction.kReverse), swere));
     autoChooser.addOption("Drive SysId Dynamic Forward", Commands.run(() -> swere.sysIdDynamic(SysIdRoutine.Direction.kForward), swere));
@@ -136,15 +164,23 @@ public class RobotContainer {
     autoChooser.addOption("Basic Left Auto", Autos.basicLeftAuto(swere, shooter));
     autoChooser.addOption("Basic Right Auto", Autos.basicRightAuto(swere, shooter));
     autoChooser.addOption("Right Outpost Shoot", Autos.rightOutpostShoot(swere, shooter));
-    autoChooser.addOption("Basic Right Turret Auto", Autos.basicRightTurretAuto(swere, shooter, turret, photonVision, operator));
+    autoChooser.addOption("Basic Right Turret Auto", Autos.basicRightTurretAuto(swere, shooter, turret, photonVision));
     autoChooser.addOption("Right Neutral Zone Auto", Autos.rightNeutralZoneAuto(swere, shooter, turret, photonVision, intake, operator));
     autoChooser.addOption("Straight Line Auto", Autos.straightLineAuto(swere));
-    autoChooser.addOption("Basic Left Turret Auto", Autos.basicLeftTurretAuto(swere, shooter, turret, photonVision, operator));
+    autoChooser.addOption("Basic Left Turret Auto", Autos.basicLeftTurretAuto(swere, shooter, turret, photonVision));
     autoChooser.addOption("Depot Auto", Autos.depotAuto(swere, shooter, turret, photonVision, intake, operator));
     
+    /*
+     * Setting default commands. These should be commands that you want to be run constantly,
+     * as default commands are called every 20ms.
+     */
     swere.setDefaultCommand(driveWithJoystick);
     turret.setDefaultCommand(Commands.run(() -> turret.trackLookAheadPose(photonVision.getHubCenterPose2d()), turret));
 
+    /*
+     * Putting data onto Elastic. This needs to be done in order for the initSendable data
+     * to be shown on Elastic.
+     */
     SmartDashboard.putData(swere);
     SmartDashboard.putData(turret);
     SmartDashboard.putData(photonVision);
@@ -174,11 +210,16 @@ public class RobotContainer {
     // cancelling on release.
     m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
     // resetGyroButton.onTrue(resetGyro);
+    /*
+     * Binding buttons to commands. Make sure you bind the correct buttons to the correct commands.
+     * onTrue should be used for commands that you want to run once; whileTrue should be used for
+     * commands that you want to run constantly while the button is being pressed.
+     */
     fieldOrientedButton.onTrue(toggleFieldOriented); // 'A' button
     toggleDriveAssistButton.onTrue(toggleDriveAssist); // 'B' button
     toggleWristButton.onTrue(toggleWristManual); // 'Left Joystick' button
-    shootButton.whileTrue(shootWhileMoving);
-    shootButton.onFalse(Commands.runOnce(() -> shooter.stopShooterAndFeeder(), shooter));
+    shootButton.whileTrue(Commands.runEnd(() -> shooter.shootWithDistance(1, turret.getLookAheadPoses()[1]), () -> shooter.stopShooterAndFeeder()).alongWith(shooter.delayedSpinSpindexer()));
+    // shootButton.whileTrue(Commands.runEnd(() -> shooter.shootWithSpeed(10.6, 10.4, 1.0), () -> shooter.stopShooterAndFeeder()).alongWith(shooter.delayedSpinSpindexer()));
     leftSideTurretTurnButton.onTrue(Commands.run(() -> turret.turnTurret(-90), turret));
     rightSideTurretTurnButton.onTrue(Commands.run(() -> turret.turnTurret(90), turret));
     straightAheadTurretButton.onTrue(Commands.run(() -> turret.turnTurret(0), turret));
@@ -197,6 +238,10 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
+    /*
+     * Make sure to return autoChooser.getSelected() here. Otherwise,
+     * the auto you choose will not run.
+     */
     return autoChooser.getSelected();
   }
 }

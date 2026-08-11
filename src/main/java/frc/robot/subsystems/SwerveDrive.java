@@ -93,7 +93,7 @@ public class SwerveDrive extends SubsystemBase {
       DriveConstants.FRONT_LEFT_ROTATE_ID, 
       DriveConstants.FRONT_LEFT_CANCODER_ID, 
       false, 
-      true, 
+      false, 
       "FL",
       DriveConstants.FL_DIAMETER
     );
@@ -114,7 +114,7 @@ public class SwerveDrive extends SubsystemBase {
       DriveConstants.BACK_LEFT_ROTATE_ID, 
       DriveConstants.BACK_LEFT_CANCODER_ID, 
       false,
-      true, 
+      false, 
       "BL",
       DriveConstants.BL_DIAMETER
     );
@@ -197,6 +197,19 @@ public class SwerveDrive extends SubsystemBase {
       VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(10)),
       VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(30))
     );
+
+    syncEncoders();
+    frontLeftModule.setState(new SwerveModuleState(0, new Rotation2d(0)));
+    frontRightModule.setState(new SwerveModuleState(0, new Rotation2d(0)));
+    backLeftModule.setState(new SwerveModuleState(0, new Rotation2d(0)));
+    backRightModule.setState(new SwerveModuleState(0, new Rotation2d(0)));
+  }
+
+  public void setState(SwerveModuleState state) {
+    frontLeftModule.setState(state);
+    frontRightModule.setState(state);
+    backLeftModule.setState(state);
+    backRightModule.setState(state);
   }
 
   public void runCharacterization(double output) {
@@ -482,7 +495,7 @@ public class SwerveDrive extends SubsystemBase {
     double[] rotations = new double[4];
 
     for(int i = 0; i < 4; i++) {
-      rotations[i] = swerveModules[i].getRotateEncoderPosition();
+      rotations[i] = swerveModules[i].absoluteRotatePosition();
     }
 
     return rotations;
@@ -603,7 +616,7 @@ public class SwerveDrive extends SubsystemBase {
       
   @Override
   public void periodic() {
-    // if(photonVision.tagIsPresentAcrossAllCameras()) {
+    if(photonVision.tagIsPresentAcrossAllCameras()) {
       // photonVision.updatePose3d(new Rotation3d(new Rotation2d(gyroRad())));
       // photonVision.updatePose2d();
 
@@ -612,7 +625,7 @@ public class SwerveDrive extends SubsystemBase {
         photonVision.getTimestampOfPose()
         // photonVision.getVisionStandardDeviations()
       );
-    // }
+    }
 
     // photonVision.addHeadingData(Timer.getFPGATimestamp(), new Rotation3d(new Rotation2d(gyroRad())));
     swervePoseEstimator.updateWithTime(Timer.getFPGATimestamp(), new Rotation2d(gyroRad()), getCurrentSwerveModulePositions());

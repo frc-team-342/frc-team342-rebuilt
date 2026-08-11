@@ -296,12 +296,24 @@ public class Shooter extends SubsystemBase {
     );
   }
 
+  /**Uses cubic regression to calculate the top shooter wheel velocity.
+   * 
+   * @param meters Distance from the hub (meters).
+   * @return Top shooter wheel velocity.
+   */
   public double getTopRegressionVelocity(double meters) {
-    return (0.0704391 * Math.pow(meters, 3)) - (0.837868 * Math.pow(meters, 2)) + (3.90859 * meters) + (3.37434);
+    // return (0.156757 * Math.pow(meters, 3)) - (1.42652 * Math.pow(meters, 2)) + (5.2989 * meters) + 2.48681;
+    return (0.0597356 * Math.pow(meters, 3)) - (0.588908 * Math.pow(meters, 2)) + (3.04758 * meters) + 4.26182;
   }
 
+  /**Uses cubic regression to calculate the bottom shooter wheel velocity.
+   * 
+   * @param meters Distance from the hub (meters).
+   * @return Bottom shooter wheel velocity.
+   */
   public double getBottomRegressionVelocity(double meters) {
-    return (0.0622992 * Math.pow(meters, 3)) - (0.779655 * Math.pow(meters, 2)) + (3.55058 * meters) + (4.34844);
+    // return (0.0733766 * Math.pow(meters, 3)) - (0.71344 * Math.pow(meters, 2)) + (3.03522 * meters) + 5.13096;
+    return (0.00898138 * Math.pow(meters, 3)) - (0.159473 * Math.pow(meters, 2)) + (1.57038 * meters) + 6.22942;
   }
 
   /**Adds a new entry into the top and bottom shooter interpolation maps.
@@ -337,23 +349,27 @@ public class Shooter extends SubsystemBase {
     flightTimeMap.put(3.5764151871506438, 1.058);
   }
 
+  /**Spins the spindexer with a 1 second startup delay.
+   * 
+   */
+  public Command delayedSpinSpindexer() {
+    return Commands.sequence(
+      new WaitCommand(1),
+      Commands.run(() -> spinSpindexer())
+    );
+  }
+
   /**Sets the target velocity (in m/s) of both shooter motors based on distance from the hub.
-   * Target velocities are obtained via interpolation.
+   * Target velocities are obtained via cubic regression.
    * Spins the spindexer and feeder as well.
    * 
    * @param speed The speed to set the feeder to.
    * @param pose The pose of the turret.
    */
-  public Command shootWithDistance(double speed, Pose2d pose) {
-    return Commands.parallel(
-      Commands.run(() -> topShooterPID.setSetpoint(getTopTargetVelocity(photonVision.getDistanceToHub(pose)), ControlType.kVelocity)),
-      Commands.run(() -> bottomShooterPID.setSetpoint(getBottomTargetVelocity(photonVision.getDistanceToHub(pose)), ControlType.kVelocity)),
-      Commands.run(() -> feed(speed)),
-      Commands.sequence(
-        new WaitCommand(1),
-        Commands.run(() -> spinSpindexer())
-      )
-    );
+  public void shootWithDistance(double speed, Pose2d pose) {
+    topShooterPID.setSetpoint(getTopRegressionVelocity(photonVision.getDistanceToHub(pose)), ControlType.kVelocity);
+    bottomShooterPID.setSetpoint(getBottomRegressionVelocity(photonVision.getDistanceToHub(pose)), ControlType.kVelocity);
+    feed(speed);
   }
 
   /**Sets the target velocity of both shooter motors to the given velocity.
@@ -363,19 +379,13 @@ public class Shooter extends SubsystemBase {
    * @param bottomShooterSpeed The velocity (in m/s) to set the bottom shooter motor to.
    * @param feederSpeed The velocity (in m/s) to set the feeder to.
    */
-  public Command shootWithSpeed(double topShooterSpeed, double bottomShooterSpeed, double feederSpeed) {
-    return Commands.parallel(
-      Commands.run(() -> topShooterPID.setSetpoint(topShooterSpeed, ControlType.kVelocity)),
-      Commands.run(() -> bottomShooterPID.setSetpoint(bottomShooterSpeed, ControlType.kVelocity)),
-      Commands.run(() -> feed(feederSpeed)),
-      Commands.sequence(
-        new WaitCommand(1),
-        Commands.run(() -> spinSpindexer())
-      )
-    );
+  public void shootWithSpeed(double topShooterSpeed, double bottomShooterSpeed, double feederSpeed) {
+    topShooterPID.setSetpoint(topShooterSpeed, ControlType.kVelocity);
+    bottomShooterPID.setSetpoint(bottomShooterSpeed, ControlType.kVelocity);
+    feed(feederSpeed);
   }
 
-  /**Sets both shooter motors to the given speed.
+  /**Sets both shooter motors to the given percent output (0.0 - 1.0).
    * Spins the feeder and spindexer as well.
    * This method does not use a closed loop controller.
    * 
@@ -383,16 +393,10 @@ public class Shooter extends SubsystemBase {
    * @param bottomShooterSpeed The speed to set the bottom shooter motor to.
    * @param feederSpeed The speed to set the feeder to.
    */
-  public Command shootWithoutPID(double topShooterSpeed, double bottomShooterSpeed, double feederSpeed) {
-    return Commands.parallel(
-      Commands.run(() -> topShooterMotor.set(topShooterSpeed)),
-      Commands.run(() -> bottomShooterMotor.set(bottomShooterSpeed)),
-      Commands.run(() -> feed(feederSpeed)),
-      Commands.sequence(
-        new WaitCommand(1),
-        Commands.run(() -> spinSpindexer())
-      )
-    );
+  public void shootWithoutPID(double topShooterSpeed, double bottomShooterSpeed, double feederSpeed) {
+    topShooterMotor.set(topShooterSpeed);
+    bottomShooterMotor.set(bottomShooterSpeed);
+    feed(feederSpeed);
   }
 
   /**Sets the feeder to the given speed.
@@ -457,6 +461,8 @@ public class Shooter extends SubsystemBase {
     builder.addDoubleProperty("Bottom Shooter Position", () -> getBottomShooterPosition(), null);
     builder.addDoubleProperty("Interpolated Top Shooter Velocity", () -> getTopTargetVelocity(photonVision.getDistanceToHub(photonVision.getTurretPose2d().get())), null);
     builder.addDoubleProperty("Interpolated Bottom Shooter Velocity", () -> getBottomTargetVelocity(photonVision.getDistanceToHub(photonVision.getTurretPose2d().get())), null);
+    builder.addDoubleProperty("Regression Top Shooter Velocity", () -> getTopRegressionVelocity(photonVision.getDistanceToHub(photonVision.getTurretPose2d().get())), null);
+    builder.addDoubleProperty("Regression Bottom Shooter Velocity", () -> getBottomRegressionVelocity(photonVision.getDistanceToHub(photonVision.getTurretPose2d().get())), null);
     builder.addBooleanProperty("Able to Shoot", () -> photonVision.tagIsPresentAcrossAllCameras(), null);
   }
 
