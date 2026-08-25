@@ -147,7 +147,7 @@ public class SwerveDrive extends SubsystemBase {
   
         /* Initalize NavX (Gyro) */
     NavX = new AHRS(AHRS.NavXComType.kMXP_SPI);
-    NavX.setAngleAdjustment(59.0);
+    NavX.setAngleAdjustment(74.68000244140625);
       
     fieldOriented = false;
     slowMode = false;
