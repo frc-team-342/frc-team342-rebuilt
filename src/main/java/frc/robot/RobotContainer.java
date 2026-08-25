@@ -47,6 +47,7 @@ public class RobotContainer {
 
   private final JoystickButton fieldOrientedButton;
   private final JoystickButton toggleWristButton;
+  private final JoystickButton toggleJoystickControlButton;
   private final JoystickButton shootButton;
   private final JoystickButton toggleDriveAssistButton;
   private final JoystickButton downtakeButton;
@@ -81,18 +82,19 @@ public class RobotContainer {
      * otherwise the code will throw an error. If you need to access one subsystem in another subsystem,
      * add it as a parameter so you don't create multiple instances of one subsystem.
      */
-    photonVision = new PhotonVision();
-    swere = new SwerveDrive(photonVision);
-    intake = new Intake();
-    shooter = new Shooter(photonVision);
-    turret = new Turret(swere, photonVision, shooter);
 
     /*
      * Creating two instances of CustomXboxController. Typically, there only need to be two
      * instances created in RobotContainer: driver and operator.
-     */
+      */
     driver = new CustomXboxController(0);
     operator = new CustomXboxController(1);
+
+    photonVision = new PhotonVision();
+    swere = new SwerveDrive(photonVision);
+    intake = new Intake();
+    shooter = new Shooter(photonVision, operator);
+    turret = new Turret(swere, photonVision, shooter);
 
     /*
      * Rather than creating commands for everything we want to do, we typically just make methods
@@ -119,6 +121,7 @@ public class RobotContainer {
      */
     fieldOrientedButton = new JoystickButton(driver, XboxController.Button.kA.value);
     toggleDriveAssistButton = new JoystickButton(driver, XboxController.Button.kB.value);
+    toggleJoystickControlButton = new JoystickButton(operator, XboxController.Button.kRightStick.value);
     shootButton = new JoystickButton(operator, XboxController.Button.kRightBumper.value);
     leftSideTurretTurnButton = new JoystickButton(operator, XboxController.Button.kX.value);
     rightSideTurretTurnButton = new JoystickButton(operator, XboxController.Button.kB.value);
@@ -218,6 +221,7 @@ public class RobotContainer {
     fieldOrientedButton.onTrue(toggleFieldOriented); // 'A' button
     toggleDriveAssistButton.onTrue(toggleDriveAssist); // 'B' button
     toggleWristButton.onTrue(toggleWristManual); // 'Left Joystick' button
+    toggleJoystickControlButton.onTrue(Commands.runOnce(() -> shooter.toggleJoystickControl()));
     shootButton.whileTrue(Commands.runEnd(() -> shooter.shootWithDistance(1, turret.getLookAheadPoses()[1]), () -> shooter.stopShooterAndFeeder()).alongWith(shooter.delayedSpinSpindexer()));
     // shootButton.whileTrue(Commands.runEnd(() -> shooter.shootWithSpeed(10.6, 10.4, 1.0), () -> shooter.stopShooterAndFeeder()).alongWith(shooter.delayedSpinSpindexer()));
     leftSideTurretTurnButton.onTrue(Commands.run(() -> turret.turnTurret(-90), turret));

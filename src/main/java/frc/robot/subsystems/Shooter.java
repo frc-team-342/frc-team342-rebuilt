@@ -9,6 +9,9 @@ import static frc.robot.Constants.ShooterConstants.*;
 import static edu.wpi.first.units.Units.Volts;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
+
+import frc.robot.CustomXboxController;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -57,12 +60,17 @@ public class Shooter extends SubsystemBase {
   private InterpolatingDoubleTreeMap flightTimeMap;
 
   private PhotonVision photonVision;
+  private CustomXboxController controller;
 
   private SysIdRoutine topShooterSysIDRoutine;
   private SysIdRoutine bottomShooterSysIDRoutine;
+
+  private double joystickPercentOutput;
+
+  private boolean joystickControl;
   
   /** Creates a new Shooter. */
-  public Shooter(PhotonVision photonVision) {
+  public Shooter(PhotonVision photonVision, CustomXboxController controller) {
     topShooterMotor = new SparkFlex(TOP_SHOOTER_MOTOR_ID, MotorType.kBrushless);
     bottomShooterMotor =  new SparkFlex(BOTTOM_SHOOTER_MOTOR_ID, MotorType.kBrushless);
     bottomFeederMotor = new SparkFlex(BOTTOM_FEEDER_MOTOR_ID, MotorType.kBrushless);
@@ -135,6 +143,7 @@ public class Shooter extends SubsystemBase {
     mapShooterFlightTimes();
 
     this.photonVision = photonVision;
+    this.controller = controller;
 
     topShooterSysIDRoutine = new SysIdRoutine(
       new Config(
@@ -155,6 +164,9 @@ public class Shooter extends SubsystemBase {
       new Mechanism(
         (volts) -> bottomShooterMotor.setVoltage(volts.in(Volts)), null, this)
     );
+
+    joystickPercentOutput = 0.0;
+    joystickControl = false;
   }
 
   /**Gets the velocity of the shooter motor controlling the top wheels.
@@ -316,6 +328,22 @@ public class Shooter extends SubsystemBase {
     return (0.00898138 * Math.pow(meters, 3)) - (0.159473 * Math.pow(meters, 2)) + (1.57038 * meters) + 6.22942;
   }
 
+  /**Gets the right joystick y axis input.
+   * 
+   * @return Right joystick y axis input.
+   */
+  public double getJoystickPercentOutputIncreaseAmount() {
+    return controller.getRightY();
+  }
+
+  /**Gets the value of the joystick control boolean.
+   * 
+   * @return The value of the joystick control boolean.
+   */
+  public boolean getJoystickControlBoolean() {
+    return joystickControl;
+  }
+
   /**Adds a new entry into the top and bottom shooter interpolation maps.
    * 
    * @param meters The distance (in meters) from the hub.
@@ -325,6 +353,26 @@ public class Shooter extends SubsystemBase {
   public void put(double meters, double topVelocity, double bottomVelocity) {
     topShooterMap.put(meters, topVelocity);
     bottomShooterMap.put(meters, bottomVelocity);
+  }
+
+  /**Updates the percent output of the shooter when using joystick control.
+   * 
+   */
+  public void updatePercentJoystickOutput() {
+    joystickPercentOutput -= (getJoystickPercentOutputIncreaseAmount() * 0.01);
+
+    if(joystickPercentOutput < 0.2) {
+      joystickPercentOutput = 0.2;
+    }else if (joystickPercentOutput > 0.4) {
+      joystickPercentOutput = 0.4;
+    }
+  }
+
+  /**Toggles joystick control.
+   * 
+   */
+  public void toggleJoystickControl() {
+    joystickControl = !joystickControl;
   }
 
   /** Puts the shooter velocity points into the velocity interpolation map*/
@@ -449,6 +497,7 @@ public class Shooter extends SubsystemBase {
 
     builder.setSmartDashboardType("Shooter");
 
+    builder.addDoubleProperty("Joystick Percent Output", () -> joystickPercentOutput, null);
     builder.addDoubleProperty("Top Shooter Velocity", () -> getTopShooterVelocity(), null);
     builder.addDoubleProperty("Bottom Shooter Velocity", () -> getBottomShooterVelocity(), null);
     builder.addDoubleProperty("Bottom Feeder Velocity", () -> getBottomFeederVelocity(), null);
@@ -464,10 +513,18 @@ public class Shooter extends SubsystemBase {
     builder.addDoubleProperty("Regression Top Shooter Velocity", () -> getTopRegressionVelocity(photonVision.getDistanceToHub(photonVision.getTurretPose2d().get())), null);
     builder.addDoubleProperty("Regression Bottom Shooter Velocity", () -> getBottomRegressionVelocity(photonVision.getDistanceToHub(photonVision.getTurretPose2d().get())), null);
     builder.addBooleanProperty("Able to Shoot", () -> photonVision.tagIsPresentAcrossAllCameras(), null);
+    builder.addBooleanProperty("Joystick Control", () -> getJoystickControlBoolean(), null);
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    // if(joystickControl == true) {
+    //   updatePercentJoystickOutput();
+    //   shootWithoutPID(joystickPercentOutput, joystickPercentOutput, 0.5);
+    //   spinSpindexer();
+    // }else{
+    //   Commands.runOnce(() -> stopShooterAndFeeder(), this);
+    // }
   }
 }
