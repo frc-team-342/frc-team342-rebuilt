@@ -154,7 +154,7 @@ public final class Constants {
      * CANCoder offsets
      * Offsets are used to ensure that all 4 CANCoders (which are absolute encoders) have the same zero position.
      */
-    public static final double FL_OFFSET = -0.022216796875;
+    public static final double FL_OFFSET = -0.0791015625;
     public static final double FR_OFFSET = -0.3671875;
     public static final double BL_OFFSET = -0.330810546875;
     public static final double BR_OFFSET = -0.251708984375;
