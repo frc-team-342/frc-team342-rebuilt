@@ -13,8 +13,12 @@ import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
+import frc.robot.lib.BLine.*;
+import frc.robot.lib.BLine.FollowPath.Builder;
+
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -66,6 +70,12 @@ public class RobotContainer {
   private final Command downtake;
   private final Command toggleWristManual;
 
+  private final Builder pathBuilder;
+
+  private final Path testStraight;
+
+  private final Command testAuto;
+
   private final SendableChooser<Command> autoChooser;
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
@@ -79,6 +89,11 @@ public class RobotContainer {
      * otherwise the code will throw an error. If you need to access one subsystem in another subsystem,
      * add it as a parameter so you don't create multiple instances of one subsystem.
      */
+    photonVision = new PhotonVision();
+    swere = new SwerveDrive(photonVision);
+    intake = new Intake();
+    shooter = new Shooter(photonVision, operator);
+    turret = new Turret(swere, photonVision, shooter);
 
     /*
      * Creating two instances of CustomXboxController. Typically, there only need to be two
@@ -87,11 +102,21 @@ public class RobotContainer {
     driver = new CustomXboxController(0);
     operator = new CustomXboxController(1);
 
-    photonVision = new PhotonVision();
-    swere = new SwerveDrive(photonVision);
-    intake = new Intake();
-    shooter = new Shooter(photonVision, operator);
-    turret = new Turret(swere, photonVision, shooter);
+    pathBuilder = new Builder(
+      swere,
+      swere::getPose2d,
+      swere::getChassisSpeeds,
+      swere::drive,
+      new PIDController(4.0, 0, 0),
+      new PIDController(1.0, 0, 0),
+      new PIDController(0.2, 0, 0)
+    ).withDefaultShouldFlip().withTRatioBasedTranslationHandoffs(true);
+
+    testStraight = new Path("Test");
+
+    testAuto = pathBuilder
+      .withPoseReset(swere::setPose)
+      .build(testStraight);
 
     /*
      * Rather than creating commands for everything we want to do, we typically just make methods
@@ -166,9 +191,12 @@ public class RobotContainer {
     autoChooser.addOption("Right Outpost Shoot", Autos.rightOutpostShoot(swere, shooter));
     autoChooser.addOption("Basic Right Turret Auto", Autos.basicRightTurretAuto(swere, shooter, turret, photonVision));
     autoChooser.addOption("Right Neutral Zone Auto", Autos.rightNeutralZoneAuto(swere, shooter, turret, photonVision, intake, operator));
+    autoChooser.addOption("Left Neutral Zone Auto", Autos.LeftNeutralZoneAuto(swere, shooter, turret, photonVision, intake, operator));
+    autoChooser.addOption("Middle Auto", Autos.MiddleAuto(swere, shooter, turret, photonVision, intake, operator));
     autoChooser.addOption("Straight Line Auto", Autos.straightLineAuto(swere));
     autoChooser.addOption("Basic Left Turret Auto", Autos.basicLeftTurretAuto(swere, shooter, turret, photonVision));
     autoChooser.addOption("Depot Auto", Autos.depotAuto(swere, shooter, turret, photonVision, intake, operator));
+    autoChooser.addOption("Straight Line BLine Test", testAuto);
     
     /*
      * Setting default commands. These should be commands that you want to be run constantly,

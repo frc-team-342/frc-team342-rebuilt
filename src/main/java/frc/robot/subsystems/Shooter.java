@@ -600,7 +600,7 @@ public class Shooter extends SubsystemBase {
 
   /** Spins the spindexer if the shooter is running.*/
   public void spinSpindexer(){
-    spindexerMotor.set(0.6);
+    spindexerMotor.set(0.75);
   }
 
   /**Spins the spindexer at a set speed.

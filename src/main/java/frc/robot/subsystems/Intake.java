@@ -146,7 +146,7 @@ public class Intake extends SubsystemBase {
      * precise movements. However, it is always most important to test the speed and ask the
      * operator for their preference.
      */
-    moveWrist(controller.getLeftY()/5);
+    moveWrist(controller.getLeftY()/3);
   }
 
   /**Moves the wrist to the given position and sets the intake to the given speed.
