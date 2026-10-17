@@ -11,7 +11,6 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 
 import frc.robot.CustomXboxController;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -88,17 +87,43 @@ public class Shooter extends SubsystemBase {
     topFeederMotorConfig = new SparkFlexConfig();
     spindexerMotorConfig = new SparkFlexConfig();
 
+    /*
+     * We use two different PID controllers for the top and bottom shooter motors.
+     * This is for one main reason: the wheels have different weights and diameters,
+     * so there will be a difference in their PID constants, as the wheels' ability
+     * to hold speed will be different.
+     */
     topShooterPID = topShooterMotor.getClosedLoopController();
     bottomShooterPID = bottomShooterMotor.getClosedLoopController();
 
     topShooterMotorConfig
+      /*
+       * For our entire shooter mechanism, all the motors are set to coast mode.
+       * This is because we're spinning all the motors at extremely high speeds,
+       * and we don't want to potentially damage anything by forcing the motors
+       * to immediately stop when the shoot command ends.
+       */
       .idleMode(IdleMode.kCoast)
       .smartCurrentLimit(60)
       .inverted(true);
 
+    //Conversion from RPM to m/s
     topShooterMotorConfig.encoder
       .velocityConversionFactor(TOP_SHOOTER_VELOCITY_CONVERSION_FACTOR);
     
+    /*
+     * Along with the regular PID configurations, we also have to add SVA values to the feed forward for the
+     * PID controllers. SVA stands for kS, kV, and kA. kS refers to the voltage required for the
+     * mechanism to overcome static friction (or, voltage required for motion to begin), kV refers
+     * to the voltage required for the mechanism to hold a constant velocity, and kA refers to
+     * the voltage required for the mechanism to hold a constant acceleration.
+     * 
+     * Basic position PID does not require the usage of SVA, as you usually hold a position rather
+     * than a velocity. However, since velocity PID typically holds the mechanism at a certain
+     * velocity, SVA is required. Depending on the mechanism, you may only need an estimated
+     * kV value. However, we've found that we've typically needed at least kS and kV values, which we
+     * obtain from system identification.
+     */
     topShooterMotorConfig.closedLoop
       .allowedClosedLoopError(SHOOTER_VELOCITY_ERROR, ClosedLoopSlot.kSlot0)
       .pid(TOP_SHOOTER_PID_VALUES[0], TOP_SHOOTER_PID_VALUES[1], TOP_SHOOTER_PID_VALUES[2], ClosedLoopSlot.kSlot0)
@@ -135,16 +160,51 @@ public class Shooter extends SubsystemBase {
     topFeederMotor.configure(topFeederMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     spindexerMotor.configure(spindexerMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
+    /*
+     * For interpolation, you're able to create a InterpolatingDoubleTreeMap
+     * and store keys/values in it, so you don't have to create your own array.
+     * 
+     * Interpolation is a method used to estimate an unknown value that falls
+     * between known data points. In simpler terms, a line of best fit is created
+     * using provided values. Whenever you want to pull a value, the line of best fit
+     * is used to estimate that value.
+     * 
+     * In our case, we used to (we've switched to using cubic regression) use interpolation
+     * to determine the appropriate velocity of the shooter at a certain distance.
+     * We input multiple distance values and their corresponding velocities. Then
+     * when we input the distance of the robot from the hub, the interpolation
+     * map returns the estimated velocity.
+     */
     topShooterMap = new InterpolatingDoubleTreeMap();
     bottomShooterMap = new InterpolatingDoubleTreeMap();
     flightTimeMap = new InterpolatingDoubleTreeMap();
 
+    //Adding values to interpolation maps
     mapShooterVelocities();
     mapShooterFlightTimes();
 
     this.photonVision = photonVision;
     this.controller = controller;
 
+    /*
+     * SysId (system identification) is used to find certain values for a mechanism.
+     * We use it to determine the kS, kV, and kA values for mechanisms.
+     * 
+     * First, declare and then instantiate the SysIdRoutine.
+     * You will need to input a Config and Mechanism object. This can be
+     * done by simply creating new Config and Mechanism objects.
+     * 
+     * The Config object requires the voltage ramp rate for the quasistatic test,
+     * the step voltage for the dynamic test, and the safety timeout. The quasistatic
+     * test will add the number inputted for voltage ramp rate every second the test runs for.
+     * The dynamic test will immediately jump to the voltage inputted. After the test duration
+     * becomes longer than the safety timeout, the system identification routine ends.
+     * 
+     * The Mechanism object requires a method to set the voltage of the mechanism, a logger,
+     * and a subsystem. Simply use [motorname].setVoltage() for the method, null for the logger
+     * (because WPILib logs all the information automatically), and the "this" keyword for the
+     * required subsystem.
+     */
     topShooterSysIDRoutine = new SysIdRoutine(
       new Config(
         Volts.of(2).per(Second),
@@ -155,6 +215,10 @@ public class Shooter extends SubsystemBase {
         (volts) -> topShooterMotor.setVoltage(volts.in(Volts)), null, this)
     );
 
+    /*
+     * We do separate routines, because the top and bottom shooters will
+     * have different SVA values.
+     */
     bottomShooterSysIDRoutine = new SysIdRoutine(
       new Config(
         Volts.of(2).per(Second),
@@ -165,6 +229,11 @@ public class Shooter extends SubsystemBase {
         (volts) -> bottomShooterMotor.setVoltage(volts.in(Volts)), null, this)
     );
 
+    /*
+     * Outreach only
+     * 
+     * Allows for manual control of shooter percentage output using a joystick.
+     */
     joystickPercentOutput = 0.0;
     joystickControl = false;
   }
@@ -265,24 +334,46 @@ public class Shooter extends SubsystemBase {
    * @return The top shooter's SysIdRoutine.
    */
   public Command runTopShooterSysID() {
+    /*
+     * We have to return a command for this method, because
+     * we're going to run the routine as an auto.
+     */
     return Commands.sequence(
+      /*
+       * Start with quasistatic forward
+       * 
+       * Spin the motor for 5 seconds; any amount of time works,
+       * but you don't want to spin it for too short of a time
+       * or too long of a time.
+       */
       topShooterSysIDRoutine
         .quasistatic(Direction.kForward)
         .withTimeout(5),
+      //Wait 3 seconds before spinning in reverse to allow the wheel to slow down
       new WaitCommand(3),
       topShooterSysIDRoutine
+      //Quasistatic reverse for 5 seconds
         .quasistatic(Direction.kReverse)
         .withTimeout(5),
       new WaitCommand(3),
+      //Move onto dynamic forward for 5 seconds
       topShooterSysIDRoutine
         .dynamic(Direction.kForward)
         .withTimeout(5),
       new WaitCommand(3),
       topShooterSysIDRoutine
+      //Dynamic reverse for 5 seconds
         .dynamic(Direction.kReverse)
         .withTimeout(5)
     );
   }
+
+  /*
+   * Do the same thing for the bottom shooter
+   * 
+   * Also, looks like someone accidentally put "bottom" twice.
+   * How did no one notice that until now?
+   */
 
   /**Runs the SysIdRoutine for the bottom shooter.
    * 
@@ -307,6 +398,17 @@ public class Shooter extends SubsystemBase {
         .withTimeout(5)
     );
   }
+
+  /*
+   * We used to use interpolation for estimating velocity values at certain distances.
+   * Now, we use cubic regression, because we found that it provided more accurate
+   * velocities at shorter and longer distances. Basically, we went onto the
+   * Desmos graphing calculator, created a table, input the distances as
+   * x and velocities as y (top shooter as y1, bottom as y2),
+   * then used the built-in Desmos regression to create 2 lines of best fit
+   * using cubic equations (1 for each shooter motor). We then copied those
+   * cubic equations into the code, which are seen in the 2 methods below.
+   */
 
   /**Uses cubic regression to calculate the top shooter wheel velocity.
    * 
@@ -359,8 +461,24 @@ public class Shooter extends SubsystemBase {
    * 
    */
   public void updatePercentJoystickOutput() {
+    /*
+     * This is "-=" instead of "+=", because moving the joystick up
+     * returns a negative value, while moving the joystick down
+     * returns a positive value.
+     * 
+     * By subtracting instead of adding, it makes it so
+     * moving the joystick up increases percent output and moving the
+     * joystick down decreases percent output. This makes it more
+     * intuitive for the operator.
+     */
     joystickPercentOutput -= (getJoystickPercentOutputIncreaseAmount() * 0.01);
 
+    /*
+     * For whatever reason, the MathUtil.clamp() method was not working,
+     * so we made our own. Basically, if the percent output is
+     * below 0.2, set it to 0.2. If it's above 0.4, set it to 0.4.
+     * This way, the shooter will only be able to shoot at 20-40%.
+     */
     if(joystickPercentOutput < 0.2) {
       joystickPercentOutput = 0.2;
     }else if (joystickPercentOutput > 0.4) {
@@ -388,6 +506,7 @@ public class Shooter extends SubsystemBase {
     put(5.560794830193121, 11.4, 10.7);
     put(5.835646600423712, 11.6, 10.9);
   }
+
   /**Puts shooter flight time points into the flight time interpolation map*/
   public void mapShooterFlightTimes(){
     flightTimeMap.put(2.125070162186267, 0.8383);
@@ -518,6 +637,11 @@ public class Shooter extends SubsystemBase {
 
   @Override
   public void periodic() {
+    /*
+     * Only uncomment the code below if the robot is being used for Outreach.
+     * You will have to redeploy code after uncommenting/commenting the code.
+     */
+
     // This method will be called once per scheduler run
     // if(joystickControl == true) {
     //   updatePercentJoystickOutput();

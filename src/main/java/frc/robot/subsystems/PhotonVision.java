@@ -20,36 +20,46 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 import org.photonvision.PhotonUtils;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.ArrayList;
 
 public class PhotonVision extends SubsystemBase {
 
-  private final Camera[] allCameras;
+  private final Camera[] allCameras; //Create an array to hold all the camera objects.
 
+  /*
+   * We have a 4th camera we could use, but the ports on the
+   * OrangePi seem to be bad? So, we only use 3 cameras.
+   */
   // private Camera robotBLCamera;
   private Camera robotRightCamera;
   private Camera robotLeftCamera;
   private Camera robotBackCamera;
 
+  /*
+   * Create instance variables to hold poses
+   */
   private Pose3d pose3d;
   private Pose2d pose2d;
   private Pose2d turretPose2d;
 
   private Field2d field;
 
+  //Variable to hold timestamp of vision reading for latency compensation
   private double timestamp;
   
+  //Matrix of vision standard deviations for better pose filtering.
   private Matrix<N3, N1> visionStandardDeviations;
 
   /** Creates a new PhotonVision. */
   public PhotonVision() {
+    /*
+     * Instantiate cameras. See Camera class for more information.
+     */
     // robotBLCamera = new Camera(ROBOT_BL_CAMERA, ROBOT_BL_CAMERA_TRANSFORM_3D);
     robotRightCamera = new Camera(
       ROBOT_RIGHT_CAMERA,
@@ -64,17 +74,25 @@ public class PhotonVision extends SubsystemBase {
       ROBOT_BACK_CAMERA_TRANSFORM_3D
     );
 
+    //Instantiate and fill the array for cameras.
     allCameras = new Camera[3];
     // allCameras[0] = robotBLCamera;
     allCameras[0] = robotRightCamera;
     allCameras[1] = robotLeftCamera;
     allCameras[2] = robotBackCamera;
 
+    //Instantiate pose variables
     pose3d = new Pose3d();
     pose2d = new Pose2d();
     turretPose2d = new Pose2d();
 
     field = new Field2d();
+
+    /*
+     * Everything below is for estimateConstrainedSolvepnpPose, which is currently not
+     * working, so don't worry about camera intrinsics and distortion coefficients for now.
+     * See the Camera class for more information.
+     */
 
     // robotRightCamera.setCameraIntrinsics(robotRightCamera.getCameraIntrinsics().get());
     // robotRightCamera.setDistortionCoefficients(robotRightCamera.getDistortionCoefficients().get());
@@ -85,6 +103,11 @@ public class PhotonVision extends SubsystemBase {
     // robotBackCamera.setCameraIntrinsics(robotBackCamera.getCameraIntrinsics().get());
     // robotBackCamera.setDistortionCoefficients(robotBackCamera.getDistortionCoefficients().get());
 
+    /*
+     * Fill the vision standard deviations with the default deviations.
+     * See the Camera class for more information.
+     */
+
     // visionStandardDeviations = VecBuilder.fill(0.5, 0.5, Double.MAX_VALUE);
   }
 
@@ -94,6 +117,7 @@ public class PhotonVision extends SubsystemBase {
    */
   public List<PhotonTrackedTarget> getAllTagsSeen() {
     List<PhotonTrackedTarget> tags = new ArrayList<>();
+    //Goes through every camera and adds all tags seen to the ArrayList object.
     for(int i = 0; i < allCameras.length; i++) {
       tags.addAll(allCameras[i].getTagsSeen());
     }
@@ -109,12 +133,14 @@ public class PhotonVision extends SubsystemBase {
   public PhotonTrackedTarget getSpecificTag(double tagID) {
     List<PhotonTrackedTarget> wantedTags = new ArrayList<>();
 
+    //Looks through every tag and grabs every instance of the wanted tag.
     for(PhotonTrackedTarget tag : getAllTagsSeen()) {
       if(tag.getFiducialId() == tagID) {
         wantedTags.add(tag);
       }
     }
 
+    //Looks at every instance of the wanted tag and determines the best quality instance.
     if(wantedTags.size() > 0) {
       PhotonTrackedTarget firstTag = wantedTags.get(0);
       PhotonTrackedTarget previousTag = wantedTags.get(0);
@@ -131,6 +157,7 @@ public class PhotonVision extends SubsystemBase {
       return bestTag;
     }
 
+    //If no instance is found, return null;
     return null;
   }
 
@@ -140,6 +167,7 @@ public class PhotonVision extends SubsystemBase {
    */
   public List<PhotonPipelineResult> getAllPipelines() {
     List<PhotonPipelineResult> results = new ArrayList<>();
+    //Goes through every camera and adds all pipelines to the ArrayList object.
     for(int i = 0; i < allCameras.length; i++) {
       results.addAll(allCameras[i].getPipelines());
     }
@@ -152,10 +180,13 @@ public class PhotonVision extends SubsystemBase {
    * @return {@code true} if there is a tag, {@code false} if not.
    */
   public boolean tagIsPresentAcrossAllCameras() {
+    //Checks if any tags are seen
     if(!getAllTagsSeen().isEmpty()) {
+      //Return true if yes
       return true;
     }
 
+    //Return false if no
     return false;
   }
 
@@ -164,12 +195,16 @@ public class PhotonVision extends SubsystemBase {
    * @return {@code true} if an alliance hub tag is present, {@code false} if not.
    */
   public boolean allianceHubTagSeen() {
+    //Goes through every camera
     for(int i = 0; i < allCameras.length; i++) {
+      //Checks if an alliance hub tag is present in the camera
       if(allCameras[i].allianceHubTagIsPresent()) {
+        //If it is, return true
         return true;
       }
     }
 
+    //If no camera is seeing the alliance hub tag, return false
     return false;
   }
 
@@ -178,12 +213,16 @@ public class PhotonVision extends SubsystemBase {
    * @return {@code true} if an alliance outpost tag is present, {@code false} if not.
    */
   public boolean allianceOutpostTagSeen() {
+    //Goes through every camera
     for(int i = 0; i < allCameras.length; i++) {
+      //Checks if an alliance outpost hub tag is present in the camera
       if(allCameras[i].allianceOutpostTagIsPresent()) {
+        //If it is, return true
         return true;
       }
     }
 
+    //If no camera is seeing the alliance outpost tag, return false
     return false;
   }
 
@@ -192,14 +231,23 @@ public class PhotonVision extends SubsystemBase {
    * @return {@code true} if an alliance tower tag is present, {@code false} if not.
    */
   public boolean allianceTowerTagSeen() {
+    //Goes through every camera
     for(int i = 0; i < allCameras.length; i++) {
+      //Checks if an alliance tower tag is present in the camera
       if(allCameras[i].allianceTowerTagIsPresent()) {
+        //If it is, return true
         return true;
       }
     }
 
+    //If no camera is seeing the alliance tower tag, return false
     return false;
   }
+
+  /*
+   * A lot of the methods in this subsystem return an Optional value.
+   * See the Camera class for more information.
+   */
 
   /**Gets the pose3d of the robot.
    * 
@@ -282,13 +330,20 @@ public class PhotonVision extends SubsystemBase {
     int numCamsUsed = 0;
     double yaw = 0;
 
+    //Goes through every camera
     for(int i = 0; i < allCameras.length; i++) {
+      /*
+       * If the camera has a calculated pose3d, calculate the
+       * robot to tag yaw and add it to the local variable.
+       * Add 1 to the count of number of cameras used.
+       */
       if(allCameras[i].getRobotPose3d().isPresent()) {
         yaw += allCameras[i].getRobotToTagYaw(tag).get();
         numCamsUsed++;
       }
     }
 
+    //Return the average robot to tag yaw across all cameras used.
     return Optional.of(yaw /= numCamsUsed);
   }
 
@@ -301,13 +356,20 @@ public class PhotonVision extends SubsystemBase {
     int numCamsUsed = 0;
     double pitch = 0;
 
+    //Goes through every camera
     for(int i = 0; i < allCameras.length; i++) {
+      /*
+       * If the camera has a calculated pose3d, calculate the
+       * robot to tag pitch and add it to the local variable.
+       * Add 1 to the count of number of cameras used.
+       */
       if(allCameras[i].getRobotPose3d().isPresent()) {
         pitch += allCameras[i].getRobotToTagPitch(tag).get();
         numCamsUsed++;
       }
     }
 
+  //Return the average robot to tag pitch across all cameras used.
     return Optional.of(pitch /= numCamsUsed);
   }
 
@@ -334,11 +396,16 @@ public class PhotonVision extends SubsystemBase {
     Pose3d bestPose = null;
     double lowestAmbiguity = 10;
 
+    //Goes through every camera
     for(int i = 0; i < allCameras.length; i++) {
+      //Update the robot pose for the camera
       allCameras[i].updateRobotPose(/*heading*/);
 
+      //If a robot pose is present
       if(allCameras[i].getRobotPose3d().isPresent()) {
+        //And the tag exists, and the pose ambiguity is lower than the current lowest ambiguity
         if(allCameras[i].getPoseAmbiguity().get() != -1 && allCameras[i].getPoseAmbiguity().get() < lowestAmbiguity) {
+          //Replace best pose and lowest ambiguity, and record the timestamp of the pose estimate
           bestPose = allCameras[i].getRobotPose3d().get();
           lowestAmbiguity = allCameras[i].getPoseAmbiguity().get();
           timestamp = allCameras[i].getTimestamp();
@@ -347,6 +414,12 @@ public class PhotonVision extends SubsystemBase {
       }
     }
 
+    /*
+     * If the bestPose variable is not null,
+     * set the current pose3d to the bestPose variable.
+     * The only reason why the bestPose variable would be null
+     * is if there are no usable tags seen.
+     */
     if(bestPose != null) {
       pose3d = bestPose;
     }
@@ -367,6 +440,7 @@ public class PhotonVision extends SubsystemBase {
    * 
    */
   public void updatePose2d() {
+    //All pose estimates are in pose3d, so simply convert from 3d to 2d.
     this.pose2d = getRobotPose3d().get().toPose2d();
   }
 
@@ -392,6 +466,7 @@ public class PhotonVision extends SubsystemBase {
    * If the robot pose2d or the hub tag is not present, this returns 0.0.
    */
   public double getDistanceToHub(Pose2d pose) {
+    //PhotonUtils does all the math for you, just input the appropriate poses.
     return PhotonUtils.getDistanceToPose(pose, getHubCenterPose2d());
   }
 
@@ -405,6 +480,14 @@ public class PhotonVision extends SubsystemBase {
     double y = 0.0;
     double rotation = 0.0;
 
+    /*
+     * The red and blue hubs have different poses, so we need to check
+     * if we are on the red or blue alliance. We can pull the tag poses from
+     * the AprilTagFieldLayout object we created in the Constants class. We can then
+     * take the average x and y coordinates of the front and back hub tags.
+     * This should give us the x and y coordinates of the center of the hub.
+     * The rotation of the hub can just stay at 0.0.
+     */
     if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
       x = (FIELD_LAYOUT.getTagPose(centerHubTagsIDs.FRONT.getCenterRedHubTagID()).get().toPose2d().getX() + FIELD_LAYOUT.getTagPose(centerHubTagsIDs.BACK.getCenterRedHubTagID()).get().toPose2d().getX()) / 2;
       y = (FIELD_LAYOUT.getTagPose(centerHubTagsIDs.FRONT.getCenterRedHubTagID()).get().toPose2d().getY() + FIELD_LAYOUT.getTagPose(centerHubTagsIDs.BACK.getCenterRedHubTagID()).get().toPose2d().getY()) / 2;
@@ -451,11 +534,25 @@ public class PhotonVision extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+
+    /*
+     * We want to be constantly updating pose3d and pose2d, so
+     * we include those methods inside the periodic function.
+     */
     updatePose3d();
     updatePose2d();
     
+    /*
+     * We technically don't need to constantly get the distance
+     * to the hub, but since the code is working and this doesn't
+     * seem to be breaking anything, I'm just going to leave it.
+     */
     getDistanceToHub(getTurretPose2d().get());
 
+    /*
+     * The field on Elastic, for whatever reason, is still not showing the
+     * 2026 field, so this is kind of useless.
+     */
     field.setRobotPose(pose2d);
   }
 }

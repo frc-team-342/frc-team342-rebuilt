@@ -32,6 +32,16 @@ import java.util.Optional;
  * a value is null rather than attempting to return null itself.
  */
 
+/*
+ * The reason this class exists is because there are multiple cameras on the robot. Rather
+ * than writing code for all three cameras in a single subsystem (which would basically 
+ * just be writing code from one camera than copy and pasting it for the other
+ * two cameras), it's easier and more efficient to simply
+ * create a class that will hold the code for a single camera.
+ * This way, you simply need to create three Camera instances in the PhotonVision subsystem
+ * and create an array to hold all three Camera objects.
+ */
+
 /** Add your docs here. */
 public class Camera {
     private PhotonCamera camera; //A PhotonCamera

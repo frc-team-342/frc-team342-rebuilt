@@ -8,8 +8,6 @@ import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.DriveWithJoystick;
-import frc.robot.commands.ExampleCommand;
-import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.PhotonVision;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.Turret;
@@ -39,8 +37,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
-  private final SwerveDrive swere;
+  private final SwerveDrive swere; //"swere" is a purposeful misspelling of "swerve"; it's a joke about a misspelling in the 2025 code.
   private final Turret turret;
   private final PhotonVision photonVision;
   private final Intake intake;
@@ -233,13 +230,6 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-    // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-    new Trigger(m_exampleSubsystem::exampleCondition)
-        .onTrue(new ExampleCommand(m_exampleSubsystem));
-
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-    // cancelling on release.
-    m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
     // resetGyroButton.onTrue(resetGyro);
     /*
      * Binding buttons to commands. Make sure you bind the correct buttons to the correct commands.
@@ -269,7 +259,6 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // An example command will be run in autonomous
     /*
      * Make sure to return autoChooser.getSelected() here. Otherwise,
      * the auto you choose will not run.
